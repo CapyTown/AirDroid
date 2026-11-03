@@ -76,33 +76,41 @@ func TestMirrorView(t *testing.T) {
 	m.state, m.stateMsg = stateDisconnected, "The device disconnected."
 	snapshot(t, "mirror-disconnected", m.view, 440, 820)
 	m.state, m.recording = stateStreaming, false
-	m.settingsOpen = true
 	m.editOpts = m.opts
-	snapshot(t, "mirror-settings", m.view, 820, 820)
+	snapshot(t, "device-settings", m.settingsView, settingsWidth, settingsHeight)
 }
 
 func TestMirrorSidebar(t *testing.T) {
 	m := testMirror(t)
 	tt := ui.NewTester(m.view, 440, 820)
-	for _, label := range []string{"Screenshot", "Record", "Rotate", "Settings", "Recent apps", "Home", "Back"} {
+	for _, label := range []string{"Screenshot", "Record", "Settings", "Recent apps", "Home", "Back"} {
 		if _, ok := tt.Find(label); !ok {
 			t.Errorf("no %q button", label)
 		}
 	}
-	if err := tt.Click("Settings"); err != nil {
-		t.Fatal(err)
+	if _, ok := tt.Find("Rotate"); ok {
+		t.Error("the sidebar has a Rotate button: rotating is in the Device menu")
 	}
-	if !m.settingsOpen || !tt.HasText("Mirroring") {
-		t.Error("the gear does not open the settings")
+}
+
+// The picture keeps the stream's aspect inside the window.
+func TestVideoRect(t *testing.T) {
+	m := testMirror(t)
+	vw, vh := m.videoRect(440, 820, 1080, 2400)
+	if vw > float64(440-chromeW)+0.5 || vh > float64(820-chromeH)+0.5 {
+		t.Errorf("picture %vx%v does not fit", vw, vh)
+	}
+	if r := vw / vh; r < 0.449 || r > 0.451 {
+		t.Errorf("aspect %v, want 0.45", r)
 	}
 }
 
 func TestSettingsView(t *testing.T) {
 	a := testApp(t)
 	s := &settingsWindow{app: a, cfg: a.cfg.Get()}
-	for i, name := range []string{"general", "mirroring", "advanced"} {
-		s.tab = i
-		snapshot(t, "settings-"+name, s.view, 580, 640)
+	for _, page := range []string{"general", "mirroring", "shortcuts", "advanced"} {
+		s.page = page
+		snapshot(t, "settings-"+page, s.view, 760, 600)
 	}
 }
 

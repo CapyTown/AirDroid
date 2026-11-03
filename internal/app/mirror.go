@@ -68,7 +68,9 @@ type mirror struct {
 	recBusy       bool // between a click and the recorder's answer
 	shotBusy      bool
 	flashAt       time.Time
-	settingsOpen  bool
+	settingsWin   *mygo.Window // this device's settings, while open
+	selfResize    time.Time    // when AirDroid last sized the window
+	resizeGen     int
 	pendingToasts []toast
 	sized         bool // the window was fitted to the stream once
 	lastClip      string
@@ -137,6 +139,7 @@ func newMirror(a *App, d *Device) *mirror {
 		Content:       ui.View(m.view),
 	})
 	m.win.OnClose(func(*mygo.CloseEvent) { m.shutdown() })
+	m.win.OnResize(m.resized)
 	m.win.OnClosed(func() { a.mirrorClosed(m) })
 	m.win.Focus()
 	mygo.App.Focus()
@@ -281,6 +284,9 @@ func (m *mirror) shutdown() {
 		return
 	}
 	m.closed = true
+	if m.settingsWin != nil {
+		m.settingsWin.Close()
+	}
 	m.gen++
 	m.curGen.Store(int64(m.gen))
 	if m.session != nil {
@@ -328,11 +334,15 @@ func (p *pipeline) VideoSize(w, h int) {
 		if p.gen != p.m.gen {
 			return
 		}
-		rotated := p.m.frameW != 0 && (p.m.frameW > p.m.frameH) != (w > h)
+		oldW, oldH := p.m.frameW, p.m.frameH
+		rotated := oldW != 0 && (oldW > oldH) != (w > h)
 		p.m.frameW, p.m.frameH = w, h
-		if !p.m.sized || rotated {
+		switch {
+		case !p.m.sized:
 			p.m.sized = true
-			p.m.fitWindow(rotated)
+			p.m.fitWindow(0, 0)
+		case rotated:
+			p.m.fitWindow(oldW, oldH)
 		}
 	})
 }
@@ -461,31 +471,97 @@ const (
 	chromeRight  = 14
 )
 
-// fitWindow sizes the window to the stream's shape: as tall as most of the
-// screen for a phone held upright, as wide for one turned.
-func (m *mirror) fitWindow(keepCenter bool) {
-	if m.frameW == 0 || m.frameH == 0 || m.win.IsFullScreen() {
-		return
+// chromeW and chromeH are the room around the picture.
+const (
+	chromeW = chromeLeft + chromeGap + sidebarWidth + chromeRight
+	chromeH = chromeTop + chromeBottom
+)
+
+// videoRect returns the picture's size in a window of w×h, at the
+// stream's aspect.
+func (m *mirror) videoRect(w, h int, frameW, frameH int) (float64, float64) {
+	availW, availH := float64(w-chromeW), float64(h-chromeH)
+	if frameW == 0 || frameH == 0 {
+		return availW, availH
 	}
+	aspect := float64(frameW) / float64(frameH)
+	vw, vh := availW, availW/aspect
+	if vh > availH {
+		vw, vh = availH*aspect, availH
+	}
+	return vw, vh
+}
+
+// setVideoSize sizes the window around a picture of vw×vh, kept within the
+// screen at the stream's aspect, centered where the window was.
+func (m *mirror) setVideoSize(vw, vh float64) {
 	b := m.win.Bounds()
 	center := mygo.Point{X: b.X + b.Width/2, Y: b.Y + b.Height/2}
 	area := mygo.Screen.DisplayNearestPoint(center).WorkArea
+	maxW := float64(area.Width)*0.92 - chromeW
+	maxH := float64(area.Height)*0.92 - chromeH
+	if s := math.Min(maxW/vw, maxH/vh); s < 1 {
+		vw, vh = vw*s, vh*s
+	}
+	w, h := int(math.Round(vw))+chromeW, int(math.Round(vh))+chromeH
+	x := center.X - w/2
+	y := center.Y - h/2
+	x = max(area.X, min(x, area.X+area.Width-w))
+	y = max(area.Y, min(y, area.Y+area.Height-h))
+	m.selfResize = time.Now()
+	m.win.SetBounds(mygo.Rectangle{X: x, Y: y, Width: w, Height: h})
+}
+
+// fitWindow sizes the window to the stream's shape. The first time, the
+// picture is as tall as most of the screen for a phone held upright, as
+// wide for one turned. When the phone turns, the picture keeps its long
+// side and turns with it, so a video in landscape gets a wide window
+// rather than a tall one with bands above and below.
+func (m *mirror) fitWindow(oldW, oldH int) {
+	if m.frameW == 0 || m.frameH == 0 || m.win.IsFullScreen() {
+		return
+	}
 	aspect := float64(m.frameW) / float64(m.frameH)
-	maxH := float64(area.Height)*0.86 - chromeTop - chromeBottom
-	maxW := float64(area.Width)*0.86 - chromeLeft - chromeGap - sidebarWidth - chromeRight
-	vh := math.Min(maxH, 920)
-	vw := vh * aspect
-	if vw > maxW {
-		vw = maxW
-		vh = vw / aspect
+	var long float64
+	if oldW > 0 && oldH > 0 {
+		w, h := m.win.ContentSize()
+		vw, vh := m.videoRect(w, h, oldW, oldH)
+		long = math.Max(vw, vh)
+	} else {
+		b := m.win.Bounds()
+		area := mygo.Screen.DisplayNearestPoint(mygo.Point{X: b.X + b.Width/2, Y: b.Y + b.Height/2}).WorkArea
+		long = math.Min(float64(area.Height)*0.86-chromeH, 920)
+		if aspect > 1 {
+			long = math.Min(float64(area.Width)*0.86-chromeW, 1280)
+		}
 	}
-	w := int(vw) + chromeLeft + chromeGap + sidebarWidth + chromeRight
-	h := int(vh) + chromeTop + chromeBottom
-	m.win.SetContentSize(w, h)
-	if keepCenter {
-		nb := m.win.Bounds()
-		m.win.SetPosition(center.X-nb.Width/2, max(area.Y, center.Y-nb.Height/2))
+	if aspect >= 1 {
+		m.setVideoSize(long, long/aspect)
+	} else {
+		m.setVideoSize(long*aspect, long)
 	}
+}
+
+// resized snaps the window to the picture once the user stops resizing
+// it, dropping the bands an aspect other than the stream's leaves.
+func (m *mirror) resized() {
+	if time.Since(m.selfResize) < 500*time.Millisecond || m.frameW == 0 || m.win.IsFullScreen() || m.win.IsMaximized() {
+		return
+	}
+	m.resizeGen++
+	gen := m.resizeGen
+	time.AfterFunc(350*time.Millisecond, func() {
+		mygo.RunOnMain(func() {
+			if gen != m.resizeGen || m.closed || m.win.IsFullScreen() {
+				return
+			}
+			w, h := m.win.ContentSize()
+			vw, vh := m.videoRect(w, h, m.frameW, m.frameH)
+			if float64(w-chromeW)-vw > 4 || float64(h-chromeH)-vh > 4 {
+				m.setVideoSize(vw, vh)
+			}
+		})
+	})
 }
 
 // --- Actions ---------------------------------------------------------------

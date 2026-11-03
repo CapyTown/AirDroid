@@ -40,3 +40,11 @@ func revealLabel() string {
 
 // hasDock reports a Dock that AirDroid's icon can leave, on macOS.
 func hasDock() bool { return goos == "darwin" }
+
+// thisComputer is how the app's text names the computer it runs on.
+func thisComputer() string {
+	if goos == "darwin" {
+		return "this Mac"
+	}
+	return "this computer"
+}

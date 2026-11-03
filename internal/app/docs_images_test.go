@@ -42,16 +42,16 @@ func TestDocsImages(t *testing.T) {
 	m.recording, m.recStart = true, time.Now().Add(-83*time.Second)
 	save("recording", ui.Render(m.view, 440, 860, 2))
 	m.recording = false
-	m.settingsOpen, m.editOpts = true, m.opts
-	save("device-settings", ui.Render(m.view, 800, 860, 2))
+	m.editOpts = m.opts
+	save("device-settings", ui.Render(m.settingsView, settingsWidth, settingsHeight, 2))
 
 	a := testApp(t)
 	s := &settingsWindow{app: a, cfg: a.cfg.Get(), openAtLogin: true,
 		adbStatus:    "adb 36.0.0 · /Applications/AirDroid.app/Contents/Resources/bin/adb",
 		scrcpyStatus: "scrcpy-server 5.0.1 · /Applications/AirDroid.app/Contents/Resources/scrcpy-server"}
-	for i, name := range []string{"settings-general", "settings-mirroring", "settings-advanced"} {
-		s.tab = i
-		save(name, ui.Render(s.view, 580, 700, 2))
+	for _, page := range []string{"general", "mirroring", "shortcuts", "advanced"} {
+		s.page = page
+		save("settings-"+page, ui.Render(s.view, 760, 600, 2))
 	}
 
 	d := &addDeviceWindow{app: a}

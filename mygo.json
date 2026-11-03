@@ -17,7 +17,8 @@
         "_adb-tls-connect._tcp",
         "_adb-tls-pairing._tcp"
       ]
-    }
+    },
+    "icon": "AppIcon.icon"
   },
   "linux": {
     "webview": false,

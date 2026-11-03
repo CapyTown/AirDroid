@@ -39,7 +39,8 @@ Windows and Linux, FFmpeg come inside the app.
 - **The phone's screen in a window**, up to its full resolution and 120 frames
   a second. The video is decoded and scaled to the window before it is drawn,
   on the GPU on a Mac, so even a large window stays light. Resize it and the
-  picture keeps its shape; rotate the phone and the window turns with it.
+  window snaps to the picture, with no empty bands. Turn the phone, to watch a
+  video full screen, and the window turns with it, as large as before.
 - **Use it as you use the phone.** Click and drag to tap and swipe, and scroll
   with the trackpad or the wheel. Right-click goes back, middle-click goes
   home.
@@ -55,19 +56,22 @@ Windows and Linux, FFmpeg come inside the app.
 
 | Recording | Device settings |
 |---|---|
-| <img src="docs/images/recording.png" alt="Recording: the red stop button and its timer"> | <img src="docs/images/device-settings.png" alt="The mirroring settings of one device, beside the sidebar"> |
+| <img src="docs/images/recording.png" alt="Recording: the green stop button and its timer"> | <img src="docs/images/device-settings.png" alt="The mirroring settings of one device, in a window of their own"> |
 
 Beside the picture, two small groups of buttons, each with a tooltip and its
 shortcut:
 
 - **Screenshot** saves a full-resolution PNG and copies it, with a flash to say
   it's done.
-- **Record** starts recording at once, and turns into a red stop button with a
-  timer while it runs.
-- **Rotate** turns the phone between portrait and landscape.
-- **Settings** sets this phone's resolution, bit rate, frame rate, codec,
-  sound, screen-off and stay-awake, without leaving the window.
+- **Record** starts recording at once, and turns into a green stop button with
+  a timer while it runs.
+- **Settings** opens this phone's resolution, bit rate, frame rate, codec,
+  sound, screen-off and stay-awake in a small window of their own, beside the
+  mirror, which you can move anywhere while you watch the change.
 - **Recent apps, Home and Back,** as on the phone.
+
+Rotating the phone, and more, are in the Device menu and its
+[shortcuts](#keyboard-shortcuts).
 
 ### Recording that costs nothing
 
@@ -104,27 +108,30 @@ shortcut:
 - **Every phone at a glance:** connected, waiting for permission or offline,
   over USB or Wi-Fi. Click one to mirror it.
 - **Phones you used over Wi-Fi** reconnect from the menu.
-- **While a recording runs,** the icon shows a red dot and the menu offers
+- **While a recording runs,** the icon shows a green dot and the menu offers
   *Stop Recording*.
 - **On a Mac, AirDroid stays out of the Dock** until you open a window, and
   leaves it when you close them (you can keep it there in Settings).
 
 ### Settings
 
-| General | Mirroring |
+| General | Shortcuts |
 |---|---|
-| <img src="docs/images/settings-general.png" alt="Settings, General"> | <img src="docs/images/settings-mirroring.png" alt="Settings, Mirroring"> |
+| <img src="docs/images/settings-general.png" alt="Settings, General: Startup, Screenshot, Record"> | <img src="docs/images/settings-shortcuts.png" alt="Settings, Shortcuts"> |
+
+Settings has its pages in a sidebar on the left, the page on the right.
 
 - **General:**
-  - Open at login, and on a Mac, the Dock icon.
-  - Where screenshots and recordings go: your Downloads folder, unless you
-    choose another.
-  - Whether screenshots are copied too.
-  - MOV or MP4, and the phone's sound in recordings.
+  - **Startup:** open at login, and on a Mac, the Dock icon.
+  - **Screenshot:** where screenshots go, your Downloads folder unless you
+    choose another, and whether they are copied too.
+  - **Record:** where recordings go, MOV or MP4, and the phone's sound in them.
 - **Mirroring:** the defaults for every phone: resolution, bit rate, frame rate, H.264 or
   H.265, sound, the phone's screen off while mirroring, stay awake, show
   touches, and keep the window on top. Each phone can have its own, from its
   window's sidebar.
+- **Shortcuts:** every key and click of a device's window, as your platform
+  writes them.
 - **Advanced:** AirDroid comes with `adb` and `scrcpy`, and can use yours
   instead, such as Homebrew's, your Linux distribution's or Android Studio's,
   showing the version of each.

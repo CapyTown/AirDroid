@@ -153,7 +153,7 @@ func (a *App) menuBar() *mygo.Menu {
 			{Label: "Take Screenshot", Accelerator: "CmdOrCtrl+S", Click: onMirror(func(m *mirror) { m.screenshot() })},
 			{Label: "Start or Stop Recording", Accelerator: "CmdOrCtrl+Shift+R", Click: onMirror(func(m *mirror) { m.toggleRecording() })},
 			{Label: "Rotate", Accelerator: "CmdOrCtrl+R", Click: onMirror(func(m *mirror) { m.rotate() })},
-			{Label: "Mirroring Settings…", Accelerator: "CmdOrCtrl+I", Click: onMirror(func(m *mirror) { m.settingsOpen = !m.settingsOpen; m.win.Invalidate() })},
+			{Label: "Mirroring Settings…", Accelerator: "CmdOrCtrl+I", Click: onMirror(func(m *mirror) { m.toggleSettings() })},
 			mygo.Separator(),
 			{Label: "Back", Accelerator: "CmdOrCtrl+B", Click: onMirror(func(m *mirror) { m.back() })},
 			{Label: "Home", Accelerator: "CmdOrCtrl+Shift+H", Click: onMirror(func(m *mirror) { m.home() })},

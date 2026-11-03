@@ -5,10 +5,12 @@ import (
 	"math"
 	"time"
 
+	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
 )
 
-var recordRed = ui.RGB(255, 59, 48)
+// recordGreen marks a recording that runs.
+var recordGreen = ui.RGB(52, 199, 89)
 
 func pillFill(t *ui.Theme) ui.Color {
 	if t.Dark {
@@ -141,16 +143,11 @@ func (m *mirror) sidebarView(c *ui.Context, vh float32) {
 			m.sideButton(c, "record", recLabel, recTip, recIcon, m.recording, m.recBusy, m.state != stateStreaming && !m.recording, m.toggleRecording)
 			if m.recording {
 				d := time.Since(m.recStart)
-				ui.Text(c, clock(d)).FontSize(12).Bold().TextColor(recordRed).FontFeatures("tnum").
+				ui.Text(c, clock(d)).FontSize(12).Bold().TextColor(recordGreen).FontFeatures("tnum").
 					Label("Recording for " + d.Truncate(time.Second).String()).MarginY(-4)
 				c.After(time.Second - d%time.Second)
 			}
-			m.sideButton(c, "rotate", "Rotate", "Rotate the device  "+keys("R"), iconRotate, false, false, m.state != stateStreaming, m.rotate)
-			gear := m.sideButton(c, "settings", "Settings", "Mirroring settings  "+keys("I"), iconSettings, m.settingsOpen, false, false, func() {
-				m.settingsOpen = !m.settingsOpen
-				m.editOpts = m.opts
-			})
-			m.settingsPopover(c, gear)
+			m.sideButton(c, "settings", "Settings", "Mirroring settings  "+keys("I"), iconSettings, m.settingsWin != nil, false, false, m.toggleSettings)
 		})
 		pill(c, func() {
 			m.sideButton(c, "recents", "Recent apps", "Recent apps  "+keys("Shift+A"), iconRecents, false, false, m.state != stateStreaming, m.recents)
@@ -180,7 +177,7 @@ func (m *mirror) sideButton(c *ui.Context, key, label, tip string, icon *ui.SVG,
 	}
 	color := t.Text
 	if active && key == "record" {
-		color = recordRed
+		color = recordGreen
 	}
 	if disabled {
 		color = t.Text.Alpha(0.3)
@@ -204,25 +201,80 @@ func clock(d time.Duration) string {
 	return fmt.Sprintf("%02d:%02d", s/60, s%60)
 }
 
-// settingsPopover edits this device's options, beside the sidebar.
-func (m *mirror) settingsPopover(c *ui.Context, anchor ui.Element) {
-	t := c.Theme()
-	ui.PopoverBase(c, anchor, &m.settingsOpen, func(panel ui.Element) {
-		panel.AttachTo(anchor, ui.AnchorTopLeft, ui.AnchorTopRight).Margin(0, 10, 0, 0).
-			Width(340).Padding(14).Gap(12).Radius(14).Background(t.Background).
-			Border(1, t.Border.Alpha(0.6)).Shadow(0, 10, 30, 0, ui.RGBA(0, 0, 0, 0.18))
-		ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
-			ui.Text(c, "Mirroring").Bold().FontSize(14).Grow(1)
-			if m.override {
-				if ui.Button(c.Key("defaults"), "Use Defaults").Tooltip("Use the options of Settings › Mirroring").Clicked() {
-					m.useDefaults()
-				}
-			}
-		})
-		if mirrorOptionsForm(c, &m.editOpts, true) {
-			m.applyOptions(m.editOpts)
+// settingsWidth and settingsHeight size the window of a device's settings,
+// which does not resize.
+const (
+	settingsWidth  = 380
+	settingsHeight = 660
+)
+
+// toggleSettings opens this device's settings in a window of their own,
+// beside the mirror, or closes it.
+func (m *mirror) toggleSettings() {
+	if m.settingsWin != nil {
+		m.settingsWin.Close()
+		return
+	}
+	m.editOpts = m.opts
+	b := m.win.Bounds()
+	area := mygo.Screen.DisplayNearestPoint(mygo.Point{X: b.X + b.Width/2, Y: b.Y + b.Height/2}).WorkArea
+	x := b.X + b.Width + 12
+	if x+settingsWidth > area.X+area.Width {
+		x = max(area.X, b.X-settingsWidth-12)
+	}
+	y := max(area.Y, min(b.Y, area.Y+area.Height-settingsHeight-28))
+	w := mygo.NewWindow(mygo.WindowOptions{
+		Title:             "Mirroring · " + m.title,
+		Width:             settingsWidth,
+		Height:            settingsHeight,
+		UseContentSize:    true,
+		X:                 x,
+		Y:                 y,
+		DisableResize:     true,
+		DisableMinimize:   true,
+		DisableMaximize:   true,
+		DisableFullScreen: true,
+		Parent:            m.win,
+		Content:           ui.View(m.settingsView),
+	})
+	w.OnClosed(func() {
+		if m.settingsWin == w {
+			m.settingsWin = nil
+			m.win.Invalidate()
 		}
-		ui.Text(c, "Resolution, bit rate, frame rate, codec, audio and staying awake reconnect the stream.").
-			FontSize(11).TextColor(t.TextMuted).Wrap()
+	})
+	m.settingsWin = w
+	m.win.Invalidate()
+}
+
+// settingsView edits this device's options.
+func (m *mirror) settingsView(c *ui.Context) {
+	t := c.Theme()
+	if c.Shortcut(ui.Cmd, ui.KeyW) || c.Shortcut(0, ui.KeyEscape) {
+		m.settingsWin.Close()
+	}
+	ui.Scroll(c).Fill().Children(func() {
+		ui.Column(c).FillWidth().Padding(14, 16, 16, 16).Gap(12).Children(func() {
+			ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
+				ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
+					ui.Text(c, m.title).Bold().FontSize(14).SingleLine().Ellipsis("…")
+					note := "Following Settings › Mirroring"
+					if m.override {
+						note = "Options of this device"
+					}
+					ui.Text(c, note).FontSize(11.5).TextColor(t.TextMuted)
+				})
+				if m.override {
+					if ui.Button(c.Key("defaults"), "Use Defaults").Tooltip("Use the options of Settings › Mirroring").Clicked() {
+						m.useDefaults()
+					}
+				}
+			})
+			if mirrorOptionsForm(c, &m.editOpts, true) {
+				m.applyOptions(m.editOpts)
+			}
+			ui.Text(c, "Resolution, bit rate, frame rate, codec, audio and staying awake reconnect the stream.").
+				FontSize(11).TextColor(t.TextMuted).Wrap()
+		})
 	})
 }

@@ -36,7 +36,7 @@ scrcpy's client code.
 
 ## Lucide
 
-The camera, settings and rotate icons are from Lucide
+The camera and settings icons are from Lucide
 (https://lucide.dev), ISC License:
 
 > Copyright (c) for portions of Lucide are held by Cole Bemis 2013-2022 as
