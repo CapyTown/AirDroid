@@ -7,6 +7,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/CapyTown/AirDroid/internal/config"
+	"github.com/CapyTown/AirDroid/locales"
 )
 
 // Grouped settings, as macOS's System Settings and Pulse lay them out: rows
@@ -101,12 +102,24 @@ func selectRow[T comparable](c *ui.Context, key, title, subtitle string, value *
 }
 
 var (
-	maxSizes      = []int{0, 2560, 1920, 1600, 1280, 1024, 800}
-	maxSizeLabels = []string{"Device resolution", "2560 px", "1920 px", "1600 px", "1280 px", "1024 px", "800 px"}
-	bitRates      = []int{2, 4, 8, 12, 16, 24, 32, 48}
-	frameRates    = []int{30, 60, 90, 120}
-	codecs        = []string{config.CodecH264, config.CodecH265}
+	maxSizes   = []int{0, 2560, 1920, 1600, 1280, 1024, 800}
+	bitRates   = []int{2, 4, 8, 12, 16, 24, 32, 48}
+	frameRates = []int{30, 60, 90, 120}
+	codecs     = []string{config.CodecH264, config.CodecH265}
 )
+
+// sizeLabels names maxSizes: the device's own resolution, then pixels.
+func sizeLabels() []string {
+	out := make([]string, len(maxSizes))
+	for i, s := range maxSizes {
+		if s == 0 {
+			out[i] = locales.DeviceResolution()
+		} else {
+			out[i] = fmt.Sprintf("%d px", s)
+		}
+	}
+	return out
+}
 
 func bitRateLabels() []string {
 	out := make([]string, len(bitRates))
@@ -134,22 +147,22 @@ func mirrorOptionsForm(c *ui.Context, o *config.MirrorOptions, compact bool) boo
 		}
 		return s
 	}
-	sectionHeading(c, "Video")
+	sectionHeading(c, locales.SectionVideo())
 	section(c, func() {
-		changed = selectRow(c, "maxSize", "Resolution", sub("The longest side of the picture. Lower is lighter on slow connections."), &o.MaxSize, maxSizes, maxSizeLabels) || changed
-		changed = selectRow(c, "bitRate", "Bit rate", sub("Higher is sharper, and heavier on Wi-Fi."), &o.BitRateMbps, bitRates, bitRateLabels()) || changed
-		changed = segmentedRow(c, "fps", "Frame rate", sub("At most this many frames a second."), &o.MaxFPS, frameRates, frameRateLabels()) || changed
-		changed = segmentedRow(c, "codec", "Codec", sub("H.265 is sharper at a bit rate, where the phone encodes it."), &o.Codec, codecs, []string{"H.264", "H.265"}) || changed
+		changed = selectRow(c, "maxSize", locales.Resolution(), sub(locales.ResolutionNote()), &o.MaxSize, maxSizes, sizeLabels()) || changed
+		changed = selectRow(c, "bitRate", locales.BitRate(), sub(locales.BitRateNote()), &o.BitRateMbps, bitRates, bitRateLabels()) || changed
+		changed = segmentedRow(c, "fps", locales.FrameRate(), sub(locales.FrameRateNote()), &o.MaxFPS, frameRates, frameRateLabels()) || changed
+		changed = segmentedRow(c, "codec", locales.Codec(), sub(locales.CodecNote()), &o.Codec, codecs, []string{"H.264", "H.265"}) || changed
 	})
-	sectionHeading(c, "Phone")
+	sectionHeading(c, locales.SectionPhone())
 	section(c, func() {
-		changed = switchRow(c, "audio", "Device audio", sub("Play the phone's sound on "+thisComputer()+" (Android 11 and later)."), &o.Audio) || changed
-		changed = switchRow(c, "screenOff", "Turn the phone's screen off", sub("Dark while mirroring; lit while the phone is locked, to unlock it there."), &o.TurnScreenOff) || changed
-		changed = switchRow(c, "stayAwake", "Stay awake", sub("Keep the phone awake while it is plugged in."), &o.StayAwake) || changed
-		changed = switchRow(c, "touches", "Show touches", sub("Show where the phone is touched, on its screen."), &o.ShowTouches) || changed
-		changed = switchRow(c, "onTop", "Keep window on top", sub("Float the mirror over other windows."), &o.AlwaysOnTop) || changed
+		changed = switchRow(c, "audio", locales.DeviceAudio(), sub(locales.DeviceAudioNote(thisComputer())), &o.Audio) || changed
+		changed = switchRow(c, "screenOff", locales.TurnScreenOff(), sub(locales.TurnScreenOffNote()), &o.TurnScreenOff) || changed
+		changed = switchRow(c, "stayAwake", locales.StayAwake(), sub(locales.StayAwakeNote()), &o.StayAwake) || changed
+		changed = switchRow(c, "touches", locales.ShowTouches(), sub(locales.ShowTouchesNote()), &o.ShowTouches) || changed
+		changed = switchRow(c, "onTop", locales.KeepOnTop(), sub(locales.KeepOnTopNote()), &o.AlwaysOnTop) || changed
 		if !compact {
-			changed = switchRow(c, "powerOff", "Turn the screen off on close", "Lock the phone when its window closes.", &o.PowerOffOnClose) || changed
+			changed = switchRow(c, "powerOff", locales.PowerOffOnClose(), locales.PowerOffOnCloseNote(), &o.PowerOffOnClose) || changed
 		}
 	})
 	return changed

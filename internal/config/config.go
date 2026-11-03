@@ -94,6 +94,9 @@ type KnownWiFi struct {
 
 // Config is the whole settings file.
 type Config struct {
+	// Language is the language AirDroid shows, as "zh-Hans": "" follows
+	// the system's.
+	Language               string `json:"language,omitempty"`
 	HideDockIconWhenClosed bool   `json:"hideDockIconWhenClosed"`
 	ScreenshotDir          string `json:"screenshotDir"`
 	CopyScreenshot         bool   `json:"copyScreenshot"`

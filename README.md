@@ -121,11 +121,14 @@ Rotating the phone, and more, are in the Device menu and its
 
 | General | Shortcuts |
 |---|---|
-| <img src="docs/images/settings-general.png" alt="Settings, General: Startup, Screenshot, Record"> | <img src="docs/images/settings-shortcuts.png" alt="Settings, Shortcuts"> |
+| <img src="docs/images/settings-general.png" alt="Settings, General: Language, Startup, Screenshot, Record"> | <img src="docs/images/settings-shortcuts.png" alt="Settings, Shortcuts"> |
 
 Settings has its pages in a sidebar on the left, the page on the right.
 
 - **General:**
+  - **Language:** English or 简体中文, following your system's language
+    unless you choose one. Phone names follow it too: a OnePlus sold in China
+    shows as 一加 Ace 3V in Chinese and OnePlus Ace 3V in English.
   - **Startup:** open at login, and on a Mac, the Dock icon.
   - **Screenshot:** where screenshots go, your Downloads folder unless you
     choose another, and whether they are copied too.
@@ -160,7 +163,7 @@ Settings has its pages in a sidebar on the left, the page on the right.
 | | | |
 |---|---|---|
 | macOS, Apple silicon | `airdroid-<version>-arm64.dmg` | Smaller, for M1 and later. Drag **AirDroid** to Applications and open it. Its icon appears in the menu bar. |
-| macOS, any Mac | `airdroid-<version>.dmg` | Universal: Apple silicon and Intel. Installs as above. |
+| macOS, any Mac | `airdroid-<version>-universal.dmg` | Universal: Apple silicon and Intel. Installs as above. |
 | Windows | `airdroid-setup-<version>-amd64.exe` | Run the installer, then open AirDroid from the Start menu. Its icon appears in the system tray. |
 | Linux | `airdroid_<version>_amd64.deb`, or `airdroid-<version>-linux-amd64.tar.gz` | Install the package (`sudo apt install ./airdroid_*.deb`), or unpack the archive and run `sh install.sh`. Open AirDroid from your applications. |
 

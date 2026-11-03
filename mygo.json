@@ -29,5 +29,9 @@
     "depends": [
       "libayatana-appindicator3-1"
     ]
+  },
+  "i18n": {
+    "dir": "locales",
+    "source": "en"
   }
 }

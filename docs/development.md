@@ -63,6 +63,24 @@ Set `MYGO_DEBUG=1` for debug logs, which include scrcpy-server's output. They
 go to `airdroid.log` in the app's logs directory (`~/Library/Logs/AirDroid`
 on macOS), and to the terminal in development builds.
 
+## Languages
+
+AirDroid's texts are in `locales/en.json`, the source, and
+`locales/zh-Hans.json`, in the ICU message format of
+[MyGo's catalogs](https://mygo.egoist.dev/). Code says them through the
+accessors of package `locales`, as `locales.StopRecordingOf(name)`. After
+changing a catalog:
+
+```sh
+go tool mygo generate    # writes locales/catalog_gen.go, which is committed
+go tool mygo i18n check  # every message in every language
+```
+
+`go tool mygo dev -lang zh-Hans` runs AirDroid in Chinese without changing
+the language it keeps, and `MYGO_LOCALE=zh-Hans go test ./internal/app`
+renders the views in it. The language follows the system's unless
+Settings › General › Language chooses one.
+
 ## Tests
 
 `go test ./...` runs everything headless, on any OS:
@@ -117,7 +135,7 @@ is pushed, and publishes them:
    | Runner | Builds |
    |---|---|
    | macOS | the Apple silicon `.dmg`, `airdroid-<version>-arm64.dmg` |
-   | macOS | the universal `.dmg`, `airdroid-<version>.dmg` |
+   | macOS | the universal `.dmg`, `airdroid-<version>-universal.dmg` |
    | Windows | the x64 installer, `airdroid-setup-<version>-amd64.exe` |
    | Ubuntu | the x64 `.deb` and `.tar.gz` |
 

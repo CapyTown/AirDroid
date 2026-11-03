@@ -3,7 +3,6 @@ package app
 import (
 	"context"
 	"errors"
-	"fmt"
 	"image"
 	"log/slog"
 	"math"
@@ -23,6 +22,7 @@ import (
 	"github.com/CapyTown/AirDroid/internal/mp4"
 	"github.com/CapyTown/AirDroid/internal/scrcpy"
 	"github.com/CapyTown/AirDroid/internal/video"
+	"github.com/CapyTown/AirDroid/locales"
 )
 
 type mirrorState int
@@ -254,7 +254,7 @@ func (m *mirror) connect() {
 			}
 			m.session = nil
 			m.state = stateDisconnected
-			m.stateMsg = "The device disconnected."
+			m.stateMsg = locales.DeviceDisconnected()
 			if err != nil {
 				m.stateMsg = err.Error()
 			}
@@ -613,12 +613,12 @@ func (m *mirror) screenshot() {
 		m.win.Update(func() {
 			m.shotBusy = false
 			if err != nil {
-				m.pendingToasts = append(m.pendingToasts, toast{text: "Screenshot failed: " + err.Error()})
+				m.pendingToasts = append(m.pendingToasts, toast{text: locales.ScreenshotFailed(err.Error())})
 				return
 			}
-			text := "Screenshot saved"
+			text := locales.ScreenshotSaved()
 			if cfg.CopyScreenshot {
-				text = "Screenshot saved and copied"
+				text = locales.ScreenshotSavedCopied()
 			}
 			m.pendingToasts = append(m.pendingToasts, toast{text: text, action: revealLabel(), fn: func() { mygo.Shell.ShowItemInFolder(path) }})
 		})
@@ -659,13 +659,10 @@ func (m *mirror) recorderReport(r recReport) {
 			path := r.paths[0]
 			m.pendingToasts = append(m.pendingToasts, toast{text: r.err.Error(), action: revealLabel(), fn: func() { mygo.Shell.ShowItemInFolder(path) }})
 		case r.err != nil:
-			m.pendingToasts = append(m.pendingToasts, toast{text: "Recording failed: " + r.err.Error()})
+			m.pendingToasts = append(m.pendingToasts, toast{text: locales.RecordingFailed(r.err.Error())})
 		case len(r.paths) > 0:
 			path := r.paths[0]
-			text := "Recording saved"
-			if len(r.paths) > 1 {
-				text = fmt.Sprintf("Recording saved in %d files", len(r.paths))
-			}
+			text := locales.RecordingSaved(len(r.paths))
 			m.pendingToasts = append(m.pendingToasts, toast{text: text, action: revealLabel(), fn: func() { mygo.Shell.ShowItemInFolder(path) }})
 		}
 	}

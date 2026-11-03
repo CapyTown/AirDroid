@@ -7,6 +7,8 @@ import (
 
 	"github.com/egoist/mygo"
 	"github.com/egoist/mygo/ui"
+
+	"github.com/CapyTown/AirDroid/locales"
 )
 
 // recordGreen marks a recording that runs.
@@ -77,7 +79,7 @@ func (m *mirror) videoView(c *ui.Context, vw, vh float32) {
 	radius := float32(math.Min(18, float64(vw)*0.05))
 	box := ui.Box(c.Key("video")).Size(vw, vh).Radius(radius).Clip().
 		Background(ui.RGB(16, 16, 18)).
-		Focusable().FocusRing(false).Bind(&m.videoFocus).Label("Device screen").
+		Focusable().FocusRing(false).Bind(&m.videoFocus).Label(locales.DeviceScreen()).
 		HandleInput(func(ev ui.InputEvent) bool { return m.input(ev, vw, vh) }).
 		TextCaret(ui.Rect{X: vw / 2, Y: vh - 40, W: 1, H: 18}).
 		Draw(func(p *ui.Painter, r ui.Rect) {
@@ -95,21 +97,21 @@ func (m *mirror) videoView(c *ui.Context, vw, vh float32) {
 		switch {
 		case m.state == stateConnecting && m.bitmap == nil:
 			overlay(c, func() {
-				ui.Spinner(c).Label("Connecting")
-				ui.Text(c, "Connecting to "+m.title+"…").FontSize(13).TextColor(ui.RGBA(255, 255, 255, 0.8))
+				ui.Spinner(c).Label(locales.Connecting())
+				ui.Text(c, locales.ConnectingTo(m.title)).FontSize(13).TextColor(ui.RGBA(255, 255, 255, 0.8))
 			})
 		case m.state == stateConnecting:
-			overlay(c, func() { ui.Spinner(c).Label("Reconnecting") }).Background(ui.RGBA(0, 0, 0, 0.35))
+			overlay(c, func() { ui.Spinner(c).Label(locales.Reconnecting()) }).Background(ui.RGBA(0, 0, 0, 0.35))
 		case m.state == stateDisconnected:
 			overlay(c, func() {
 				ui.Icon(c, iconAlert).FontSize(28).TextColor(ui.RGBA(255, 255, 255, 0.85))
 				ui.Text(c, m.stateMsg).FontSize(13).TextColor(ui.RGBA(255, 255, 255, 0.85)).TextAlign(ui.Center).Wrap().MaxWidth(vw - 48)
 				if d := m.app.devices[m.serial]; d != nil && d.Ready() {
-					if ui.PrimaryButton(c.Key("reconnect"), "Reconnect").Clicked() {
+					if ui.PrimaryButton(c.Key("reconnect"), locales.Reconnect()).Clicked() {
 						m.connect()
 					}
 				} else {
-					ui.Text(c, "Waiting for the device to come back…").FontSize(12).TextColor(ui.RGBA(255, 255, 255, 0.6))
+					ui.Text(c, locales.WaitingForDevice()).FontSize(12).TextColor(ui.RGBA(255, 255, 255, 0.6))
 				}
 			}).Background(ui.RGBA(0, 0, 0, 0.55))
 		}
@@ -139,29 +141,29 @@ func overlay(c *ui.Context, fn func()) ui.Element {
 func (m *mirror) sidebarView(c *ui.Context, vh float32) {
 	ui.Column(c).Width(sidebarWidth).Height(vh).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 		pill(c, func() {
-			m.sideButton(c, "screenshot", "Screenshot", "Take a screenshot  "+keys("S"), iconCamera, false, m.shotBusy, m.state != stateStreaming, m.screenshot)
-			recLabel, recTip, recIcon := "Record", "Start recording  "+keys("Shift+R"), iconRecord
+			m.sideButton(c, "screenshot", locales.Screenshot(), locales.ScreenshotTip(keys("S")), iconCamera, false, m.shotBusy, m.state != stateStreaming, m.screenshot)
+			recLabel, recTip, recIcon := locales.Record(), locales.StartRecordingTip(keys("Shift+R")), iconRecord
 			if m.recording {
-				recLabel, recTip, recIcon = "Stop recording", "Stop recording  "+keys("Shift+R"), iconStop
+				recLabel, recTip, recIcon = locales.StopRecording(), locales.StopRecordingTip(keys("Shift+R")), iconStop
 			}
 			m.sideButton(c, "record", recLabel, recTip, recIcon, m.recording, m.recBusy, m.state != stateStreaming && !m.recording, m.toggleRecording)
 			if m.recording {
 				d := time.Since(m.recStart)
 				ui.Text(c, clock(d)).FontSize(12).Bold().TextColor(recordGreen).FontFeatures("tnum").
-					Label("Recording for " + d.Truncate(time.Second).String()).MarginY(-4)
+					Label(locales.RecordingFor(d.Truncate(time.Second).String())).MarginY(-4)
 				c.After(time.Second - d%time.Second)
 			}
-			screenTip := "Turn the phone's screen off, on again while it is locked"
+			screenTip := locales.ScreenOffTip()
 			if m.opts.TurnScreenOff {
-				screenTip = "Turn the phone's screen back on"
+				screenTip = locales.ScreenOnTip()
 			}
-			m.sideButton(c, "screen", "Phone screen off", screenTip, iconScreenOff, m.opts.TurnScreenOff, false, m.state != stateStreaming && !m.opts.TurnScreenOff, m.toggleScreenOff)
-			m.sideButton(c, "settings", "Settings", "Mirroring settings  "+keys("I"), iconSettings, m.settingsWin != nil, false, false, m.toggleSettings)
+			m.sideButton(c, "screen", locales.PhoneScreenOff(), screenTip, iconScreenOff, m.opts.TurnScreenOff, false, m.state != stateStreaming && !m.opts.TurnScreenOff, m.toggleScreenOff)
+			m.sideButton(c, "settings", locales.Settings(), locales.MirroringSettingsTip(keys("I")), iconSettings, m.settingsWin != nil, false, false, m.toggleSettings)
 		})
 		pill(c, func() {
-			m.sideButton(c, "recents", "Recent apps", "Recent apps  "+keys("Shift+A"), iconRecents, false, false, m.state != stateStreaming, m.recents)
-			m.sideButton(c, "home", "Home", "Home  "+keys("Shift+H"), iconHome, false, false, m.state != stateStreaming, m.home)
-			m.sideButton(c, "back", "Back", "Back  "+keys("B"), iconBack, false, false, m.state != stateStreaming, m.back)
+			m.sideButton(c, "recents", locales.RecentApps(), locales.RecentAppsTip(keys("Shift+A")), iconRecents, false, false, m.state != stateStreaming, m.recents)
+			m.sideButton(c, "home", locales.Home(), locales.HomeTip(keys("Shift+H")), iconHome, false, false, m.state != stateStreaming, m.home)
+			m.sideButton(c, "back", locales.Back(), locales.BackTip(keys("B")), iconBack, false, false, m.state != stateStreaming, m.back)
 		})
 	})
 }
@@ -238,7 +240,7 @@ func (m *mirror) toggleSettings() {
 	}
 	y := max(area.Y, min(b.Y, area.Y+area.Height-settingsHeight-28))
 	w := mygo.NewWindow(mygo.WindowOptions{
-		Title:             "Mirroring · " + m.title,
+		Title:             locales.MirroringOf(m.title),
 		Width:             settingsWidth,
 		Height:            settingsHeight,
 		UseContentSize:    true,
@@ -272,14 +274,14 @@ func (m *mirror) settingsView(c *ui.Context) {
 			ui.Row(c).FillWidth().AlignItems(ui.Center).Children(func() {
 				ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
 					ui.Text(c, m.title).Bold().FontSize(14).SingleLine().Ellipsis("…")
-					note := "Following Settings › Mirroring"
+					note := locales.FollowingDefaults()
 					if m.override {
-						note = "Options of this device"
+						note = locales.OwnOptions()
 					}
 					ui.Text(c, note).FontSize(11.5).TextColor(t.TextMuted)
 				})
 				if m.override {
-					if ui.Button(c.Key("defaults"), "Use Defaults").Tooltip("Use the options of Settings › Mirroring").Clicked() {
+					if ui.Button(c.Key("defaults"), locales.UseDefaults()).Tooltip(locales.UseDefaultsTip()).Clicked() {
 						m.useDefaults()
 					}
 				}
@@ -287,7 +289,7 @@ func (m *mirror) settingsView(c *ui.Context) {
 			if mirrorOptionsForm(c, &m.editOpts, true) {
 				m.applyOptions(m.editOpts)
 			}
-			ui.Text(c, "Resolution, bit rate, frame rate, codec, audio and staying awake reconnect the stream.").
+			ui.Text(c, locales.ReconnectNote()).
 				FontSize(11).TextColor(t.TextMuted).Wrap()
 		})
 	})

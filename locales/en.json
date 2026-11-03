@@ -1,0 +1,481 @@
+{
+  "@@locale": "en",
+  "devices": "Devices",
+  "stopRecordingOf": "Stop Recording {name}",
+  "@stopRecordingOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceUnauthorized": "{name} — allow USB debugging on the phone",
+  "@deviceUnauthorized": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceOffline": "{name} — offline",
+  "@deviceOffline": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceNoPermission": "{name} — no permission to use the device",
+  "@deviceNoPermission": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "deviceState": "{name} — {state}",
+  "@deviceState": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "state": {
+        "type": "String"
+      }
+    }
+  },
+  "noDevices": "No devices connected",
+  "connectOverWiFi": "Connect Over Wi-Fi",
+  "switchToWiFiOf": "Switch {name} to Wi-Fi",
+  "@switchToWiFiOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "disconnectOf": "Disconnect {name}",
+  "@disconnectOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "wireless": "Wireless",
+  "addDeviceMenu": "Add Device…",
+  "settingsMenu": "Settings…",
+  "aboutApp": "About AirDroid",
+  "quit": "Quit",
+  "trayRecording": "AirDroid — recording",
+  "menuFile": "File",
+  "menuDevice": "Device",
+  "takeScreenshot": "Take Screenshot",
+  "startStopRecording": "Start or Stop Recording",
+  "rotate": "Rotate",
+  "mirroringSettingsMenu": "Mirroring Settings…",
+  "back": "Back",
+  "home": "Home",
+  "recentAppsMenu": "Recent Apps",
+  "notifications": "Notifications",
+  "volumeUp": "Volume Up",
+  "volumeDown": "Volume Down",
+  "power": "Power",
+  "openInScrcpy": "Open in scrcpy Window",
+  "transportWiFi": "Wi-Fi",
+  "transportUSB": "USB",
+  "deviceDisconnected": "The device disconnected.",
+  "screenshotFailed": "Screenshot failed: {error}",
+  "@screenshotFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "screenshotSaved": "Screenshot saved",
+  "screenshotSavedCopied": "Screenshot saved and copied",
+  "recordingFailed": "Recording failed: {error}",
+  "@recordingFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "recordingSaved": "{count, plural, one {Recording saved} other {Recording saved in # files}}",
+  "@recordingSaved": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "deviceScreen": "Device screen",
+  "connecting": "Connecting",
+  "connectingTo": "Connecting to {name}…",
+  "@connectingTo": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "reconnecting": "Reconnecting",
+  "reconnect": "Reconnect",
+  "waitingForDevice": "Waiting for the device to come back…",
+  "screenshot": "Screenshot",
+  "screenshotTip": "Take a screenshot  {keys}",
+  "@screenshotTip": {
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "record": "Record",
+  "stopRecording": "Stop recording",
+  "startRecordingTip": "Start recording  {keys}",
+  "@startRecordingTip": {
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "stopRecordingTip": "Stop recording  {keys}",
+  "@stopRecordingTip": {
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "recordingFor": "Recording for {time}",
+  "@recordingFor": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "phoneScreenOff": "Phone screen off",
+  "screenOffTip": "Turn the phone's screen off, on again while it is locked",
+  "screenOnTip": "Turn the phone's screen back on",
+  "settings": "Settings",
+  "mirroringSettingsTip": "Mirroring settings  {keys}",
+  "@mirroringSettingsTip": {
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "recentApps": "Recent apps",
+  "recentAppsTip": "Recent apps  {keys}",
+  "@recentAppsTip": {
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "homeTip": "Home  {keys}",
+  "@homeTip": {
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "backTip": "Back  {keys}",
+  "@backTip": {
+    "placeholders": {
+      "keys": {
+        "type": "String"
+      }
+    }
+  },
+  "mirroringOf": "Mirroring · {name}",
+  "@mirroringOf": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "followingDefaults": "Following Settings › Mirroring",
+  "ownOptions": "Options of this device",
+  "useDefaults": "Use Defaults",
+  "useDefaultsTip": "Use the options of Settings › Mirroring",
+  "reconnectNote": "Resolution, bit rate, frame rate, codec, audio and staying awake reconnect the stream.",
+  "deviceResolution": "Device resolution",
+  "sectionVideo": "Video",
+  "resolution": "Resolution",
+  "resolutionNote": "The longest side of the picture. Lower is lighter on slow connections.",
+  "bitRate": "Bit rate",
+  "bitRateNote": "Higher is sharper, and heavier on Wi-Fi.",
+  "frameRate": "Frame rate",
+  "frameRateNote": "At most this many frames a second.",
+  "codec": "Codec",
+  "codecNote": "H.265 is sharper at a bit rate, where the phone encodes it.",
+  "sectionPhone": "Phone",
+  "deviceAudio": "Device audio",
+  "deviceAudioNote": "Play the phone's sound on {computer} (Android 11 and later).",
+  "@deviceAudioNote": {
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "turnScreenOff": "Turn the phone's screen off",
+  "turnScreenOffNote": "Dark while mirroring; lit while the phone is locked, to unlock it there.",
+  "stayAwake": "Stay awake",
+  "stayAwakeNote": "Keep the phone awake while it is plugged in.",
+  "showTouches": "Show touches",
+  "showTouchesNote": "Show where the phone is touched, on its screen.",
+  "keepOnTop": "Keep window on top",
+  "keepOnTopNote": "Float the mirror over other windows.",
+  "powerOffOnClose": "Turn the screen off on close",
+  "powerOffOnCloseNote": "Lock the phone when its window closes.",
+  "addDevice": "Add Device",
+  "addDeviceIntro": "Connect an Android phone to mirror and control it.",
+  "connection": "Connection",
+  "done": "Done",
+  "usbStep1": "On the phone, open Settings › About phone and tap Build number seven times, to turn on Developer options.",
+  "usbStep2": "In Settings › System › Developer options, turn on USB debugging.",
+  "usbStep3": "Plug the phone into {computer}, and tap Allow when it asks to allow USB debugging.",
+  "@usbStep3": {
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingUSB": "Waiting for a phone over USB…",
+  "tapAllow": "Tap Allow on the phone to allow USB debugging.",
+  "offlineReplug": "Offline: unplug it and plug it in again.",
+  "useWiFi": "Use Wi-Fi",
+  "useWiFiTip": "Keep mirroring after unplugging the cable",
+  "mirror": "Mirror",
+  "qrCode": "QR Code",
+  "pairingCode": "Pairing Code",
+  "ipAddress": "IP Address",
+  "pairingQR": "Pairing QR code",
+  "qrStep1": "Join the phone and {computer} to the same Wi-Fi network.",
+  "@qrStep1": {
+    "placeholders": {
+      "computer": {
+        "type": "String"
+      }
+    }
+  },
+  "qrStep2": "On the phone, open Developer options › Wireless debugging (Android 11 and later).",
+  "qrStep3": "Tap Pair device with QR code, and scan this code.",
+  "tryAgain": "Try Again",
+  "codeStep1": "On the phone, open Developer options › Wireless debugging, and tap Pair device with pairing code.",
+  "codeStep2": "Type the IP address and port, and the code, that it shows.",
+  "ipAndPort": "IP address & port",
+  "pairingAddress": "Pairing address",
+  "pair": "Pair",
+  "addrStep1": "For a phone paired before, or listening for adb over TCP/IP (adb tcpip 5555), type its address.",
+  "addrStep2": "Under Wireless debugging, the address and port show at the top of the page.",
+  "address": "Address",
+  "connect": "Connect",
+  "recent": "Recent",
+  "forget": "Forget",
+  "forgetOf": "Forget {address}",
+  "@forgetOf": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "connectingToAddr": "Connecting to {address}…",
+  "@connectingToAddr": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "connectedTo": "Connected to {address}.",
+  "@connectedTo": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "pairing": "Pairing…",
+  "pairedConnected": "Paired and connected to {address}.",
+  "@pairedConnected": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "waitingScan": "Waiting for the phone to scan the code…",
+  "pairingFailed": "Pairing failed: {error}",
+  "@pairingFailed": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "scrcpyNotFound": "scrcpy was not found",
+  "chooseInAdvanced": "Choose it in Settings › Advanced.",
+  "couldNotStartScrcpy": "Could not start scrcpy",
+  "couldNotConnect": "Could not connect to {address}",
+  "@couldNotConnect": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "couldNotSwitchWiFi": "Could not switch to Wi-Fi",
+  "connectedOverWiFi": "Connected over Wi-Fi",
+  "unplugCable": "You can unplug the cable: {address}",
+  "@unplugCable": {
+    "placeholders": {
+      "address": {
+        "type": "String"
+      }
+    }
+  },
+  "ok": "OK",
+  "showInFinder": "Show in Finder",
+  "showInExplorer": "Show in Explorer",
+  "showInFolder": "Show in Folder",
+  "thisMac": "this Mac",
+  "thisComputer": "this computer",
+  "pageGeneral": "General",
+  "pageMirroring": "Mirroring",
+  "pageShortcuts": "Shortcuts",
+  "pageAdvanced": "Advanced",
+  "pageAbout": "About",
+  "sectionStartup": "Startup",
+  "openAtLogin": "Open at login",
+  "openAtLoginNote": "Starts in the background, without opening a window.",
+  "couldNotChangeLogin": "Could not change Open at login",
+  "hideDock": "Hide Dock icon when closed",
+  "hideDockNote": "With AirDroid in the menu bar, closing its windows takes it out of the Dock.",
+  "language": "Language",
+  "languageNote": "The language of AirDroid's windows and menus.",
+  "followSystem": "Follow System",
+  "sectionScreenshot": "Screenshot",
+  "saveScreenshotsTo": "Save screenshots to",
+  "choose": "Choose…",
+  "saveScreenshotsTitle": "Save Screenshots To",
+  "copyScreenshots": "Copy screenshots",
+  "copyScreenshotsNote": "Put each screenshot on the clipboard, too.",
+  "sectionRecord": "Record",
+  "saveRecordingsTo": "Save recordings to",
+  "saveRecordingsTitle": "Save Recordings To",
+  "format": "Format",
+  "formatNote": "Recordings keep the phone's own video, as it was encoded: nothing is encoded again.",
+  "movKeepsSound": "The phone's sound goes into MOV movies.",
+  "mp4NoSound": "MP4 recordings hold video only: choose MOV to keep the sound.",
+  "recordAudio": "Record device audio",
+  "osRunsWhat": "Mirrors the screen: its server runs on the phone",
+  "osAdb": "adb, which reaches the phone",
+  "osFFmpeg": "Decodes the video on Windows and Linux",
+  "osMyGo": "The app framework and its native UI",
+  "osPurego": "Calls the system's libraries without cgo",
+  "osTypesetting": "Shapes text",
+  "osGoX": "Images, networking and text",
+  "osQR": "Draws the pairing QR code",
+  "osIcons": "Icons",
+  "developmentBuild": "Development build",
+  "versionOf": "Version {version}",
+  "@versionOf": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "checkForUpdates": "Check for Updates…",
+  "sendFeedback": "Send Feedback…",
+  "sourceCode": "Source Code",
+  "openSource": "Open source",
+  "open": "Open",
+  "licencesNote": "Their licences ship with AirDroid, beside each program.",
+  "shortcutsNote": "In a device's window. The keys AirDroid does not take go to the phone.",
+  "groupCapture": "Capture",
+  "groupDevice": "Device",
+  "groupApp": "AirDroid",
+  "groupMouse": "Mouse",
+  "takeAScreenshot": "Take a screenshot",
+  "startOrStopRecording": "Start or stop recording",
+  "pullNotifications": "Pull down the notifications",
+  "volumeUpLower": "Volume up",
+  "volumeDownLower": "Volume down",
+  "pasteClipboard": "Paste the computer's clipboard on the phone",
+  "deviceMirroringSettings": "This device's mirroring settings",
+  "tapAndSwipe": "Tap, and swipe",
+  "clickDrag": "Click, drag",
+  "rightClick": "Right-click",
+  "middleClick": "Middle-click",
+  "scroll": "Scroll",
+  "wheelTrackpad": "Wheel, trackpad",
+  "mirroringNote": "What a device starts with. Each device can change them from the gear of its window's sidebar.",
+  "devicesOwnOptions": "Devices with their own options",
+  "resetAll": "Reset All",
+  "advancedNote": "AirDroid comes with adb and scrcpy. Choose others to use, such as the ones Homebrew or Android Studio install.",
+  "adbServer": "adb server",
+  "adbServerNote": "Restart it when devices stop showing up.",
+  "restart": "Restart",
+  "settingsFile": "Settings file",
+  "bundled": "Bundled",
+  "custom": "Custom",
+  "toolSource": "{name} source",
+  "@toolSource": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "path": "Path",
+  "chooseTool": "Choose {name}",
+  "@chooseTool": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "noBundledTool": "This build has no bundled {name}: AirDroid looks for one on your PATH.",
+  "@noBundledTool": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "notWorking": "Not working: {error}",
+  "@notWorking": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "versionLearned": "version learned on first use",
+  "notFound": "Not found: {error}",
+  "@notFound": {
+    "placeholders": {
+      "error": {
+        "type": "String"
+      }
+    }
+  },
+  "connectingEllipsis": "Connecting…",
+  "languageEnglish": "English"
+}

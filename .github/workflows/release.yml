@@ -33,7 +33,7 @@ jobs:
             platform: darwin/universal
             adb: darwin
             artifact: macos-universal
-            path: build/darwin-universal/*.dmg
+            path: build/darwin-universal/*-universal.dmg
           - name: Windows x64 installer
             os: windows-latest
             platform: windows/amd64
@@ -92,6 +92,16 @@ jobs:
       # Publishing belongs to the release job; these builds need no signing secrets.
       - name: Build installer
         run: go tool mygo build -platform "${{ matrix.platform }}" -sign=- -skip-notarize
+      # MyGo names the universal DMG airdroid-<version>.dmg: say what it holds,
+      # as the arm64 one does.
+      - name: Name the universal DMG
+        if: matrix.platform == 'darwin/universal'
+        run: |
+          for f in build/darwin-universal/*.dmg; do
+            case "$f" in *-universal.dmg) continue ;; esac
+            mv "$f" "${f%.dmg}-universal.dmg"
+          done
+          ls build/darwin-universal/*.dmg
       - uses: actions/upload-artifact@v7
         with:
           name: ${{ matrix.artifact }}

@@ -9,9 +9,11 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/ui"
 
 	"github.com/CapyTown/AirDroid/internal/config"
+	"github.com/CapyTown/AirDroid/locales"
 )
 
 // settingsWindow is the app's settings: pages chosen in a sidebar on the
@@ -32,20 +34,21 @@ type settingsWindow struct {
 }
 
 var settingsPages = []struct {
-	id, name string
-	icon     *ui.SVG
+	id   string
+	name func() string
+	icon *ui.SVG
 }{
-	{"general", "General", iconSettings},
-	{"mirroring", "Mirroring", iconMirror},
-	{"shortcuts", "Shortcuts", iconKeyboard},
-	{"advanced", "Advanced", iconTools},
-	{"about", "About", iconInfo},
+	{"general", locales.PageGeneral, iconSettings},
+	{"mirroring", locales.PageMirroring, iconMirror},
+	{"shortcuts", locales.PageShortcuts, iconKeyboard},
+	{"advanced", locales.PageAdvanced, iconTools},
+	{"about", locales.PageAbout, iconInfo},
 }
 
 func pageName(id string) string {
 	for _, p := range settingsPages {
 		if p.id == id {
-			return p.name
+			return p.name()
 		}
 	}
 	return ""
@@ -73,7 +76,7 @@ func (a *App) openSettingsPage(page string) {
 	s.adbCustom = s.cfg.ADBPath != ""
 	s.scrcpyCustom = s.cfg.ScrcpyPath != ""
 	s.win = mygo.NewWindow(mygo.WindowOptions{
-		Title:             "Settings",
+		Title:             locales.Settings(),
 		Width:             860,
 		Height:            600,
 		MinWidth:          760,
@@ -124,7 +127,7 @@ func (s *settingsWindow) view(c *ui.Context) {
 			ui.Box(c).FillWidth().Height(top + 12).DragWindow()
 			ui.Sidebar(c.Key("pages"), &s.page, func() {
 				for _, p := range settingsPages {
-					ui.SidebarItem(c.Key(p.id), p.id, p.icon, p.name)
+					ui.SidebarItem(c.Key(p.id), p.id, p.icon, p.name())
 				}
 			}).FillWidth().Grow(1).Padding(0, 10).Background(ui.Transparent)
 		})
@@ -159,62 +162,85 @@ func sectionHeading(c *ui.Context, title string) {
 	ui.Text(c, title).Bold().FontSize(13).Padding(10, 4, 0, 4)
 }
 
+// languages are those AirDroid is written in; "" follows the system's.
+var languages = []string{"", "en", "zh-Hans"}
+
+func languageLabels() []string {
+	out := make([]string, len(languages))
+	for i, tag := range languages {
+		if tag == "" {
+			out[i] = locales.FollowSystem()
+		} else {
+			// Each language named in itself, as "简体中文".
+			out[i] = i18n.Autonym(tag)
+		}
+	}
+	return out
+}
+
 func (s *settingsWindow) general(c *ui.Context) {
-	sectionHeading(c, "Startup")
 	section(c, func() {
-		if switchRow(c, "login", "Open at login", "Starts in the background, without opening a window.", &s.openAtLogin) {
+		lang := s.cfg.Language
+		if selectRow(c, "language", locales.Language(), locales.LanguageNote(), &lang, languages, languageLabels()) {
+			s.save(func(c *config.Config) { c.Language = lang })
+			mygo.App.SetLocale(lang)
+		}
+	})
+	sectionHeading(c, locales.SectionStartup())
+	section(c, func() {
+		if switchRow(c, "login", locales.OpenAtLogin(), locales.OpenAtLoginNote(), &s.openAtLogin) {
 			on := s.openAtLogin
 			go func() {
 				err := mygo.App.SetOpenAtLogin(on)
 				s.win.Update(func() {
 					if err != nil {
 						s.openAtLogin = !on
-						s.app.alert("Could not change Open at login", err.Error())
+						s.app.alert(locales.CouldNotChangeLogin(), err.Error())
 					}
 				})
 			}()
 		}
 		hide := s.cfg.HideDockIconWhenClosed
-		if hasDock() && switchRow(c, "dock", "Hide Dock icon when closed", "With AirDroid in the menu bar, closing its windows takes it out of the Dock.", &hide) {
+		if hasDock() && switchRow(c, "dock", locales.HideDock(), locales.HideDockNote(), &hide) {
 			s.save(func(c *config.Config) { c.HideDockIconWhenClosed = hide })
 			s.app.windowsChanged()
 		}
 	})
-	sectionHeading(c, "Screenshot")
+	sectionHeading(c, locales.SectionScreenshot())
 	section(c, func() {
-		formRow(c, "Save screenshots to", displayPath(s.cfg.ScreenshotDir), func() {
-			if ui.Button(c.Key("shotDir"), "Choose…").Clicked() {
-				s.chooseDir("Save Screenshots To", s.cfg.ScreenshotDir, func(dir string) {
+		formRow(c, locales.SaveScreenshotsTo(), displayPath(s.cfg.ScreenshotDir), func() {
+			if ui.Button(c.Key("shotDir"), locales.Choose()).Clicked() {
+				s.chooseDir(locales.SaveScreenshotsTitle(), s.cfg.ScreenshotDir, func(dir string) {
 					s.save(func(c *config.Config) { c.ScreenshotDir = dir })
 				})
 			}
 		})
 		copyShot := s.cfg.CopyScreenshot
-		if switchRow(c, "copyShot", "Copy screenshots", "Put each screenshot on the clipboard, too.", &copyShot) {
+		if switchRow(c, "copyShot", locales.CopyScreenshots(), locales.CopyScreenshotsNote(), &copyShot) {
 			s.save(func(c *config.Config) { c.CopyScreenshot = copyShot })
 		}
 	})
 
-	sectionHeading(c, "Record")
+	sectionHeading(c, locales.SectionRecord())
 	section(c, func() {
-		formRow(c, "Save recordings to", displayPath(s.cfg.RecordingDir), func() {
-			if ui.Button(c.Key("recDir"), "Choose…").Clicked() {
-				s.chooseDir("Save Recordings To", s.cfg.RecordingDir, func(dir string) {
+		formRow(c, locales.SaveRecordingsTo(), displayPath(s.cfg.RecordingDir), func() {
+			if ui.Button(c.Key("recDir"), locales.Choose()).Clicked() {
+				s.chooseDir(locales.SaveRecordingsTitle(), s.cfg.RecordingDir, func(dir string) {
 					s.save(func(c *config.Config) { c.RecordingDir = dir })
 				})
 			}
 		})
 		format := s.cfg.RecordingFormat
-		if segmentedRow(c, "format", "Format", "Recordings keep the phone's own video, as it was encoded: nothing is encoded again.", &format,
+		if segmentedRow(c, "format", locales.Format(), locales.FormatNote(), &format,
 			[]string{config.FormatMOV, config.FormatMP4}, []string{"MOV", "MP4"}) {
 			s.save(func(c *config.Config) { c.RecordingFormat = format })
 		}
 		recAudio := s.cfg.RecordAudio
-		sub := "The phone's sound goes into MOV movies."
+		sub := locales.MovKeepsSound()
 		if s.cfg.RecordingFormat == config.FormatMP4 {
-			sub = "MP4 recordings hold video only: choose MOV to keep the sound."
+			sub = locales.Mp4NoSound()
 		}
-		if switchRow(c, "recAudio", "Record device audio", sub, &recAudio) {
+		if switchRow(c, "recAudio", locales.RecordAudio(), sub, &recAudio) {
 			s.save(func(c *config.Config) { c.RecordAudio = recAudio })
 		}
 	})
@@ -222,16 +248,20 @@ func (s *settingsWindow) general(c *ui.Context) {
 }
 
 // openSource lists what AirDroid is made with and ships, with licences.
-var openSource = []struct{ name, licence, note, url string }{
-	{"scrcpy", "Apache-2.0", "Mirrors the screen: its server runs on the phone", "https://github.com/Genymobile/scrcpy"},
-	{"Android SDK Platform-Tools", "Apache-2.0", "adb, which reaches the phone", "https://developer.android.com/tools/releases/platform-tools"},
-	{"FFmpeg", "GPL-3.0", "Decodes the video on Windows and Linux", "https://ffmpeg.org"},
-	{"MyGo", "MIT", "The app framework and its native UI", "https://github.com/egoist/mygo"},
-	{"purego", "Apache-2.0", "Calls the system's libraries without cgo", "https://github.com/ebitengine/purego"},
-	{"go-text/typesetting", "BSD-3-Clause or Unlicense", "Shapes text", "https://github.com/go-text/typesetting"},
-	{"Go x/image, x/net, x/text", "BSD-3-Clause", "Images, networking and text", "https://pkg.go.dev/golang.org/x"},
-	{"rsc.io/qr", "BSD-3-Clause", "Draws the pairing QR code", "https://github.com/rsc/qr"},
-	{"Lucide", "ISC", "Icons", "https://lucide.dev"},
+var openSource = []struct {
+	name, licence string
+	note          func() string
+	url           string
+}{
+	{"scrcpy", "Apache-2.0", locales.OsRunsWhat, "https://github.com/Genymobile/scrcpy"},
+	{"Android SDK Platform-Tools", "Apache-2.0", locales.OsAdb, "https://developer.android.com/tools/releases/platform-tools"},
+	{"FFmpeg", "GPL-3.0", locales.OsFFmpeg, "https://ffmpeg.org"},
+	{"MyGo", "MIT", locales.OsMyGo, "https://github.com/egoist/mygo"},
+	{"purego", "Apache-2.0", locales.OsPurego, "https://github.com/ebitengine/purego"},
+	{"go-text/typesetting", "BSD-3-Clause or Unlicense", locales.OsTypesetting, "https://github.com/go-text/typesetting"},
+	{"Go x/image, x/net, x/text", "BSD-3-Clause", locales.OsGoX, "https://pkg.go.dev/golang.org/x"},
+	{"rsc.io/qr", "BSD-3-Clause", locales.OsQR, "https://github.com/rsc/qr"},
+	{"Lucide", "ISC", locales.OsIcons, "https://lucide.dev"},
 }
 
 //go:embed assets/logo.png
@@ -246,9 +276,9 @@ func (s *settingsWindow) about(c *ui.Context) {
 	if logoBitmap == nil {
 		logoBitmap, _ = ui.DecodeBitmap(logoPNG)
 	}
-	version := "Development build"
+	version := locales.DevelopmentBuild()
 	if v := mygo.App.Version(); v != "" {
-		version = "Version " + v
+		version = locales.VersionOf(v)
 	}
 	ui.Column(c).FillWidth().AlignItems(ui.Center).Gap(6).Padding(4, 0, 12, 0).Children(func() {
 		if logoBitmap != nil {
@@ -258,62 +288,62 @@ func (s *settingsWindow) about(c *ui.Context) {
 		ui.Text(c, version).FontSize(12.5).TextColor(t.TextMuted)
 		ui.Text(c, "© 2026 CapyTown · MIT License").FontSize(12.5).TextColor(t.TextMuted)
 		ui.Row(c).Gap(8).Padding(8, 0, 0, 0).Children(func() {
-			if ui.Button(c.Key("updates"), "Check for Updates…").Clicked() {
+			if ui.Button(c.Key("updates"), locales.CheckForUpdates()).Clicked() {
 				mygo.Shell.OpenExternal(ReleasesURL)
 			}
-			if ui.Button(c.Key("feedback"), "Send Feedback…").Clicked() {
+			if ui.Button(c.Key("feedback"), locales.SendFeedback()).Clicked() {
 				mygo.Shell.OpenExternal(IssuesURL)
 			}
-			if ui.Button(c.Key("source"), "Source Code").Clicked() {
+			if ui.Button(c.Key("source"), locales.SourceCode()).Clicked() {
 				mygo.Shell.OpenExternal(SourceURL)
 			}
 		})
 	})
-	sectionHeading(c, "Open source")
+	sectionHeading(c, locales.OpenSource())
 	section(c, func() {
 		for _, o := range openSource {
 			ui.Row(c.Key(o.name)).FillWidth().MinHeight(48).PaddingY(9).Gap(12).AlignItems(ui.Center).Children(func() {
 				ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
 					ui.Text(c, o.name).FontSize(13)
-					ui.Text(c, o.note).FontSize(11.5).TextColor(t.TextMuted).Wrap()
+					ui.Text(c, o.note()).FontSize(11.5).TextColor(t.TextMuted).Wrap()
 				})
 				ui.Text(c, o.licence).FontSize(11.5).TextColor(t.TextMuted)
-				ui.Link(c.Key("link"), "Open", o.url).TextColor(t.Accent).Label(o.name)
+				ui.Link(c.Key("link"), locales.Open(), o.url).TextColor(t.Accent).Label(o.name)
 			})
 		}
 	})
-	sectionNote(c, "Their licences ship with AirDroid, beside each program.")
+	sectionNote(c, locales.LicencesNote())
 }
 
 // shortcuts lists the keys and clicks of AirDroid.
 func (s *settingsWindow) shortcuts(c *ui.Context) {
-	sectionNote(c, "In a device's window. The keys AirDroid does not take go to the phone.")
+	sectionNote(c, locales.ShortcutsNote())
 	groups := []struct {
 		title string
 		rows  [][2]string
 	}{
-		{"Capture", [][2]string{{"Take a screenshot", keys("S")}, {"Start or stop recording", keys("Shift+R")}}},
-		{"Device", [][2]string{
-			{"Rotate", keys("R")},
-			{"Back", keys("B")},
-			{"Home", keys("Shift+H")},
-			{"Recent apps", keys("Shift+A")},
-			{"Pull down the notifications", keys("Shift+N")},
-			{"Volume up", keys("↑")},
-			{"Volume down", keys("↓")},
-			{"Power", keys("P")},
-			{"Paste the computer's clipboard on the phone", keys("V")},
+		{locales.GroupCapture(), [][2]string{{locales.TakeAScreenshot(), keys("S")}, {locales.StartOrStopRecording(), keys("Shift+R")}}},
+		{locales.GroupDevice(), [][2]string{
+			{locales.Rotate(), keys("R")},
+			{locales.Back(), keys("B")},
+			{locales.Home(), keys("Shift+H")},
+			{locales.RecentApps(), keys("Shift+A")},
+			{locales.PullNotifications(), keys("Shift+N")},
+			{locales.VolumeUpLower(), keys("↑")},
+			{locales.VolumeDownLower(), keys("↓")},
+			{locales.Power(), keys("P")},
+			{locales.PasteClipboard(), keys("V")},
 		}},
-		{"AirDroid", [][2]string{
-			{"This device's mirroring settings", keys("I")},
-			{"Add Device", keys("N")},
-			{"Settings", keys(",")},
+		{locales.GroupApp(), [][2]string{
+			{locales.DeviceMirroringSettings(), keys("I")},
+			{locales.AddDevice(), keys("N")},
+			{locales.Settings(), keys(",")},
 		}},
-		{"Mouse", [][2]string{
-			{"Tap, and swipe", "Click, drag"},
-			{"Back", "Right-click"},
-			{"Home", "Middle-click"},
-			{"Scroll", "Wheel, trackpad"},
+		{locales.GroupMouse(), [][2]string{
+			{locales.TapAndSwipe(), locales.ClickDrag()},
+			{locales.Back(), locales.RightClick()},
+			{locales.Home(), locales.MiddleClick()},
+			{locales.Scroll(), locales.WheelTrackpad()},
 		}},
 	}
 	for _, g := range groups {
@@ -334,7 +364,7 @@ func keycap(c *ui.Context, k string) {
 }
 
 func (s *settingsWindow) mirroring(c *ui.Context) {
-	sectionNote(c, "What a device starts with. Each device can change them from the gear of its window's sidebar.")
+	sectionNote(c, locales.MirroringNote())
 	o := s.cfg.Mirror
 	if mirrorOptionsForm(c, &o, false) {
 		s.save(func(c *config.Config) { c.Mirror = o })
@@ -354,8 +384,8 @@ func (s *settingsWindow) mirroring(c *ui.Context) {
 		}
 		if has {
 			section(c, func() {
-				formRow(c, "Devices with their own options", "", func() {
-					if ui.Button(c.Key("resetDevices"), "Reset All").Clicked() {
+				formRow(c, locales.DevicesOwnOptions(), "", func() {
+					if ui.Button(c.Key("resetDevices"), locales.ResetAll()).Clicked() {
 						s.save(func(c *config.Config) {
 							for _, p := range c.Devices {
 								if p != nil {
@@ -376,7 +406,7 @@ func (s *settingsWindow) mirroring(c *ui.Context) {
 
 func (s *settingsWindow) advanced(c *ui.Context) {
 	t := c.Theme()
-	sectionNote(c, "AirDroid comes with adb and scrcpy. Choose others to use, such as the ones Homebrew or Android Studio install.")
+	sectionNote(c, locales.AdvancedNote())
 	section(c, func() {
 		s.toolRow(c, "adb", "adb", &s.adbCustom, s.cfg.ADBPath, s.adbStatus, BundledADB(), func(path string) {
 			s.save(func(c *config.Config) { c.ADBPath = path })
@@ -388,8 +418,8 @@ func (s *settingsWindow) advanced(c *ui.Context) {
 		})
 	})
 	section(c, func() {
-		formRow(c, "adb server", "Restart it when devices stop showing up.", func() {
-			if ui.Button(c.Key("restartADB"), "Restart").Disabled(s.checking).Clicked() {
+		formRow(c, locales.AdbServer(), locales.AdbServerNote(), func() {
+			if ui.Button(c.Key("restartADB"), locales.Restart()).Disabled(s.checking).Clicked() {
 				client := s.app.adb
 				s.checking = true
 				go func() {
@@ -401,7 +431,7 @@ func (s *settingsWindow) advanced(c *ui.Context) {
 				}()
 			}
 		})
-		formRow(c, "Settings file", displayPath(config.DefaultPath()), func() {
+		formRow(c, locales.SettingsFile(), displayPath(config.DefaultPath()), func() {
 			if ui.Button(c.Key("revealConfig"), revealLabel()).Clicked() {
 				mygo.Shell.ShowItemInFolder(config.DefaultPath())
 			}
@@ -420,7 +450,7 @@ func (s *settingsWindow) toolRow(c *ui.Context, key, name string, custom *bool, 
 		if *custom {
 			idx = 1
 		}
-		ui.Segmented(c.Key(key+"Mode"), &idx, "Bundled", "Custom").Label(name + " source")
+		ui.Segmented(c.Key(key+"Mode"), &idx, locales.Bundled(), locales.Custom()).Label(locales.ToolSource(name))
 		*custom = idx == 1
 	})
 	if before != *custom && !*custom {
@@ -428,16 +458,16 @@ func (s *settingsWindow) toolRow(c *ui.Context, key, name string, custom *bool, 
 		s.toolsChanged()
 	}
 	if *custom {
-		formRow(c, "Path", "", func() {
+		formRow(c, locales.Path(), "", func() {
 			p := path
 			in := ui.TextInput(c.Key(key+"Path"), &p).Placeholder("/opt/homebrew/bin/" + name).Width(260).SingleLine()
 			if in.Submitted() {
 				set(strings.TrimSpace(p))
 				s.toolsChanged()
 			}
-			if ui.Button(c.Key(key+"Choose"), "Choose…").Clicked() {
+			if ui.Button(c.Key(key+"Choose"), locales.Choose()).Clicked() {
 				go func() {
-					paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: s.win, Title: "Choose " + name, ShowHiddenFiles: true})
+					paths, err := mygo.Dialog.Open(mygo.OpenDialogOptions{Parent: s.win, Title: locales.ChooseTool(name), ShowHiddenFiles: true})
 					if err != nil || len(paths) == 0 {
 						return
 					}
@@ -449,7 +479,7 @@ func (s *settingsWindow) toolRow(c *ui.Context, key, name string, custom *bool, 
 			}
 		})
 	} else if bundledPath == "" {
-		ui.Text(c, "This build has no bundled "+name+": AirDroid looks for one on your PATH.").FontSize(11.5).TextColor(t.TextMuted).Padding(0, 0, 10, 0)
+		ui.Text(c, locales.NoBundledTool(name)).FontSize(11.5).TextColor(t.TextMuted).Padding(0, 0, 10, 0)
 	}
 }
 
@@ -468,17 +498,17 @@ func (s *settingsWindow) checkTools() {
 		if v, err := a.adb.Version(ctx); err == nil {
 			adbStatus = "adb " + v + " · " + displayPath(a.adb.Path())
 		} else {
-			adbStatus = "Not working: " + err.Error()
+			adbStatus = locales.NotWorking(err.Error())
 		}
 		scrcpyStatus := ""
 		if srv, err := a.resolveServer(); err == nil {
 			v := srv.Version
 			if v == "" || v == "0.0" {
-				v = "version learned on first use"
+				v = locales.VersionLearned()
 			}
 			scrcpyStatus = "scrcpy-server " + v + " · " + displayPath(srv.Path)
 		} else {
-			scrcpyStatus = "Not found: " + err.Error()
+			scrcpyStatus = locales.NotFound(err.Error())
 		}
 		s.win.Update(func() { s.adbStatus, s.scrcpyStatus = adbStatus, scrcpyStatus })
 	}()

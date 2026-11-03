@@ -2,6 +2,8 @@ package app
 
 import (
 	"github.com/egoist/mygo"
+
+	"github.com/CapyTown/AirDroid/locales"
 )
 
 // refreshMenu rebuilds the tray menu from the devices, as they come and
@@ -19,7 +21,7 @@ func (a *App) refreshMenu() {
 			recording = true
 			mm := m
 			add(&mygo.MenuItem{
-				Label: "Stop Recording " + m.title,
+				Label: locales.StopRecordingOf(m.title),
 				Click: func(*mygo.MenuItem, *mygo.Window) { mm.toggleRecording() },
 			})
 		}
@@ -28,7 +30,7 @@ func (a *App) refreshMenu() {
 		add(mygo.Separator())
 	}
 
-	add(&mygo.MenuItem{Label: "Devices", Disabled: true})
+	add(&mygo.MenuItem{Label: locales.Devices(), Disabled: true})
 	devices := a.sortedDevices()
 	var usb, wifi []*Device
 	for _, d := range devices {
@@ -41,7 +43,7 @@ func (a *App) refreshMenu() {
 				Label:   label,
 				Type:    mygo.MenuItemCheckbox,
 				Checked: mirroring,
-				ToolTip: d.Info.Subtitle(),
+				ToolTip: d.Info.SubtitleIn(mygo.App.Locale()),
 				Click: func(it *mygo.MenuItem, _ *mygo.Window) {
 					it.SetChecked(true)
 					a.openMirror(dev.Serial)
@@ -53,17 +55,17 @@ func (a *App) refreshMenu() {
 				usb = append(usb, d)
 			}
 		case d.State == "unauthorized":
-			add(&mygo.MenuItem{Label: d.Name() + " — allow USB debugging on the phone", Disabled: true})
+			add(&mygo.MenuItem{Label: locales.DeviceUnauthorized(d.Name()), Disabled: true})
 		case d.State == "offline":
-			add(&mygo.MenuItem{Label: d.Name() + " — offline", Disabled: true})
+			add(&mygo.MenuItem{Label: locales.DeviceOffline(d.Name()), Disabled: true})
 		case d.State == "no permissions":
-			add(&mygo.MenuItem{Label: d.Name() + " — no permission to use the device", Disabled: true})
+			add(&mygo.MenuItem{Label: locales.DeviceNoPermission(d.Name()), Disabled: true})
 		default:
-			add(&mygo.MenuItem{Label: d.Name() + " — " + d.State, Disabled: true})
+			add(&mygo.MenuItem{Label: locales.DeviceState(d.Name(), d.State), Disabled: true})
 		}
 	}
 	if len(devices) == 0 {
-		add(&mygo.MenuItem{Label: "No devices connected", Disabled: true})
+		add(&mygo.MenuItem{Label: locales.NoDevices(), Disabled: true})
 	}
 
 	// Wi-Fi devices that connected before and are not here now.
@@ -83,7 +85,7 @@ func (a *App) refreshMenu() {
 		})
 	}
 	if len(recent) > 0 {
-		add(&mygo.MenuItem{Label: "Connect Over Wi-Fi", Submenu: recent})
+		add(&mygo.MenuItem{Label: locales.ConnectOverWiFi(), Submenu: recent})
 	}
 
 	// Moving between USB and Wi-Fi.
@@ -91,32 +93,32 @@ func (a *App) refreshMenu() {
 	for _, d := range usb {
 		serial := d.Serial
 		wifiItems = append(wifiItems, &mygo.MenuItem{
-			Label: "Switch " + d.Name() + " to Wi-Fi",
+			Label: locales.SwitchToWiFiOf(d.Name()),
 			Click: func(*mygo.MenuItem, *mygo.Window) { a.switchToWiFi(serial) },
 		})
 	}
 	for _, d := range wifi {
 		serial := d.Serial
 		wifiItems = append(wifiItems, &mygo.MenuItem{
-			Label: "Disconnect " + d.Name(),
+			Label: locales.DisconnectOf(d.Name()),
 			Click: func(*mygo.MenuItem, *mygo.Window) { a.disconnect(serial) },
 		})
 	}
 	if len(wifiItems) > 0 {
-		add(&mygo.MenuItem{Label: "Wireless", Submenu: wifiItems})
+		add(&mygo.MenuItem{Label: locales.Wireless(), Submenu: wifiItems})
 	}
 
 	add(mygo.Separator())
-	add(&mygo.MenuItem{Label: "Add Device…", Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }})
+	add(&mygo.MenuItem{Label: locales.AddDeviceMenu(), Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }})
 	add(mygo.Separator())
-	add(&mygo.MenuItem{Label: "Settings…", Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }})
-	add(&mygo.MenuItem{Label: "About AirDroid", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettingsPage("about") }})
-	add(&mygo.MenuItem{Role: mygo.RoleQuit, Label: "Quit"})
+	add(&mygo.MenuItem{Label: locales.SettingsMenu(), Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }})
+	add(&mygo.MenuItem{Label: locales.AboutApp(), Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettingsPage("about") }})
+	add(&mygo.MenuItem{Role: mygo.RoleQuit, Label: locales.Quit()})
 
 	a.tray.SetMenu(mygo.NewMenu(items))
 	if recording {
 		_ = a.tray.SetIcon(trayIconRecPNG, false)
-		a.tray.SetToolTip("AirDroid — recording")
+		a.tray.SetToolTip(locales.TrayRecording())
 	} else {
 		_ = a.tray.SetIcon(trayIconPNG, true)
 		a.tray.SetToolTip("AirDroid")
@@ -134,38 +136,38 @@ func (a *App) menuBar() *mygo.Menu {
 	}
 	return mygo.NewMenu([]*mygo.MenuItem{
 		{Label: "AirDroid", Submenu: []*mygo.MenuItem{
-			{Label: "About AirDroid", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettingsPage("about") }},
+			{Label: locales.AboutApp(), Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettingsPage("about") }},
 			mygo.Separator(),
-			{Label: "Settings…", Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }},
+			{Label: locales.SettingsMenu(), Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }},
 			mygo.Separator(),
 			{Role: mygo.RoleHide},
 			{Role: mygo.RoleHideOthers},
 			{Role: mygo.RoleUnhide},
 			mygo.Separator(),
-			{Role: mygo.RoleQuit, Label: "Quit"},
+			{Role: mygo.RoleQuit, Label: locales.Quit()},
 		}},
-		{Label: "File", Submenu: []*mygo.MenuItem{
-			{Label: "Add Device…", Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }},
+		{Label: locales.MenuFile(), Submenu: []*mygo.MenuItem{
+			{Label: locales.AddDeviceMenu(), Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }},
 			mygo.Separator(),
 			{Role: mygo.RoleClose},
 		}},
 		{Role: mygo.RoleEditMenu},
-		{Label: "Device", Submenu: []*mygo.MenuItem{
-			{Label: "Take Screenshot", Accelerator: "CmdOrCtrl+S", Click: onMirror(func(m *mirror) { m.screenshot() })},
-			{Label: "Start or Stop Recording", Accelerator: "CmdOrCtrl+Shift+R", Click: onMirror(func(m *mirror) { m.toggleRecording() })},
-			{Label: "Rotate", Accelerator: "CmdOrCtrl+R", Click: onMirror(func(m *mirror) { m.rotate() })},
-			{Label: "Mirroring Settings…", Accelerator: "CmdOrCtrl+I", Click: onMirror(func(m *mirror) { m.toggleSettings() })},
+		{Label: locales.MenuDevice(), Submenu: []*mygo.MenuItem{
+			{Label: locales.TakeScreenshot(), Accelerator: "CmdOrCtrl+S", Click: onMirror(func(m *mirror) { m.screenshot() })},
+			{Label: locales.StartStopRecording(), Accelerator: "CmdOrCtrl+Shift+R", Click: onMirror(func(m *mirror) { m.toggleRecording() })},
+			{Label: locales.Rotate(), Accelerator: "CmdOrCtrl+R", Click: onMirror(func(m *mirror) { m.rotate() })},
+			{Label: locales.MirroringSettingsMenu(), Accelerator: "CmdOrCtrl+I", Click: onMirror(func(m *mirror) { m.toggleSettings() })},
 			mygo.Separator(),
-			{Label: "Back", Accelerator: "CmdOrCtrl+B", Click: onMirror(func(m *mirror) { m.back() })},
-			{Label: "Home", Accelerator: "CmdOrCtrl+Shift+H", Click: onMirror(func(m *mirror) { m.home() })},
-			{Label: "Recent Apps", Accelerator: "CmdOrCtrl+Shift+A", Click: onMirror(func(m *mirror) { m.recents() })},
+			{Label: locales.Back(), Accelerator: "CmdOrCtrl+B", Click: onMirror(func(m *mirror) { m.back() })},
+			{Label: locales.Home(), Accelerator: "CmdOrCtrl+Shift+H", Click: onMirror(func(m *mirror) { m.home() })},
+			{Label: locales.RecentAppsMenu(), Accelerator: "CmdOrCtrl+Shift+A", Click: onMirror(func(m *mirror) { m.recents() })},
 			mygo.Separator(),
-			{Label: "Notifications", Accelerator: "CmdOrCtrl+Shift+N", Click: onMirror(func(m *mirror) { m.notifications() })},
-			{Label: "Volume Up", Accelerator: "CmdOrCtrl+Up", Click: onMirror(func(m *mirror) { m.key(akVolumeUp) })},
-			{Label: "Volume Down", Accelerator: "CmdOrCtrl+Down", Click: onMirror(func(m *mirror) { m.key(akVolumeDown) })},
-			{Label: "Power", Accelerator: "CmdOrCtrl+P", Click: onMirror(func(m *mirror) { m.key(akPower) })},
+			{Label: locales.Notifications(), Accelerator: "CmdOrCtrl+Shift+N", Click: onMirror(func(m *mirror) { m.notifications() })},
+			{Label: locales.VolumeUp(), Accelerator: "CmdOrCtrl+Up", Click: onMirror(func(m *mirror) { m.key(akVolumeUp) })},
+			{Label: locales.VolumeDown(), Accelerator: "CmdOrCtrl+Down", Click: onMirror(func(m *mirror) { m.key(akVolumeDown) })},
+			{Label: locales.Power(), Accelerator: "CmdOrCtrl+P", Click: onMirror(func(m *mirror) { m.key(akPower) })},
 			mygo.Separator(),
-			{Label: "Open in scrcpy Window", Click: onMirror(func(m *mirror) { a.openInScrcpy(m.serial) })},
+			{Label: locales.OpenInScrcpy(), Click: onMirror(func(m *mirror) { a.openInScrcpy(m.serial) })},
 		}},
 		{Role: mygo.RoleWindowMenu},
 	})

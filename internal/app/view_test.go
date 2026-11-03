@@ -11,6 +11,7 @@ import (
 	"github.com/egoist/mygo/ui"
 
 	"github.com/CapyTown/AirDroid/internal/config"
+	"github.com/CapyTown/AirDroid/locales"
 )
 
 // Views render without a window. MYGO_SNAPSHOTS=dir writes what they
@@ -125,4 +126,23 @@ func TestAddDeviceView(t *testing.T) {
 	snapshot(t, "add-wifi-address", d.view, 480, 600)
 	d.wifiMode = 1
 	snapshot(t, "add-wifi-code", d.view, 480, 600)
+}
+
+// The views say the language the app shows.
+func TestMirrorSidebarChinese(t *testing.T) {
+	t.Setenv("MYGO_LOCALE", "zh-Hans")
+	m := testMirror(t)
+	tt := ui.NewTester(m.view, 440, 820)
+	for _, label := range []string{"截屏", "录制", "手机息屏", "设置", "最近任务", "主屏幕", "返回"} {
+		if _, ok := tt.Find(label); !ok {
+			t.Errorf("no %q button", label)
+		}
+	}
+	if got := locales.RecordingSaved(3); got != "录屏已保存为 3 个文件" {
+		t.Errorf("plural %q", got)
+	}
+	t.Setenv("MYGO_LOCALE", "en")
+	if got := locales.RecordingSaved(1); got != "Recording saved" {
+		t.Errorf("one %q", got)
+	}
 }

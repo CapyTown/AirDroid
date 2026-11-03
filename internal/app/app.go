@@ -16,10 +16,12 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/i18n"
 
 	"github.com/CapyTown/AirDroid/internal/adb"
 	"github.com/CapyTown/AirDroid/internal/config"
 	"github.com/CapyTown/AirDroid/internal/scrcpy"
+	"github.com/CapyTown/AirDroid/locales"
 )
 
 // Where the project lives, for updates and feedback.
@@ -53,9 +55,9 @@ func (d *Device) Name() string {
 // Transport is "USB" or "Wi-Fi".
 func (d *Device) Transport() string {
 	if d.WiFi() {
-		return "Wi-Fi"
+		return locales.TransportWiFi()
 	}
-	return "USB"
+	return locales.TransportUSB()
 }
 
 // App is AirDroid's state. Everything in it is read and changed on the main
@@ -106,6 +108,8 @@ func (a *App) Start() {
 	if hasDock() {
 		mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
 	}
+	a.setLanguage(a.cfg.Get().Language)
+	mygo.App.OnLocaleChanged(func(string) { a.localeChanged() })
 	mygo.App.SetMenu(a.menuBar())
 	mygo.App.OnWindowAllClosed(func() {}) // a menu bar app lives on
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.quitting = true })
@@ -128,6 +132,33 @@ func (a *App) Start() {
 	a.refreshMenu()
 	a.startTracking()
 	go a.resolveServer()
+}
+
+// setLanguage shows the language of tag, "" for the system's.
+func (a *App) setLanguage(tag string) {
+	if tag != "" && i18n.Normalize(tag) == "" {
+		tag = ""
+	}
+	mygo.App.SetLocale(tag)
+}
+
+// localeChanged says the menus, titles and device names in the language
+// the app shows now. Windows of native UI draw anew by themselves.
+func (a *App) localeChanged() {
+	mygo.App.SetMenu(a.menuBar())
+	a.refreshMenu()
+	for _, m := range a.mirrors {
+		m.setInfo(m.info)
+		if m.settingsWin != nil {
+			m.settingsWin.SetTitle(locales.MirroringOf(m.title))
+		}
+	}
+	if a.settings != nil {
+		a.settings.win.SetTitle(locales.Settings())
+	}
+	if a.add != nil {
+		a.add.win.SetTitle(locales.AddDevice())
+	}
 }
 
 func (a *App) shutdown() {
@@ -274,7 +305,7 @@ func (a *App) openInScrcpy(serial string) {
 		bin = lookTool("scrcpy")
 	}
 	if bin == "" {
-		a.alert("scrcpy was not found", "Choose it in Settings › Advanced.")
+		a.alert(locales.ScrcpyNotFound(), locales.ChooseInAdvanced())
 		return
 	}
 	cmd := exec.Command(bin, "--serial="+serial)
@@ -283,7 +314,7 @@ func (a *App) openInScrcpy(serial string) {
 		cmd.Env = append(cmd.Env, "SCRCPY_SERVER_PATH="+server.Path)
 	}
 	if err := cmd.Start(); err != nil {
-		a.alert("Could not start scrcpy", err.Error())
+		a.alert(locales.CouldNotStartScrcpy(), err.Error())
 		return
 	}
 	go cmd.Wait()
@@ -441,7 +472,7 @@ func (a *App) connectWiFi(addr string, mirrorIt bool) {
 		err := client.Connect(ctx, addr)
 		mygo.RunOnMain(func() {
 			if err != nil {
-				a.alert("Could not connect to "+addr, err.Error())
+				a.alert(locales.CouldNotConnect(addr), err.Error())
 				return
 			}
 			if mirrorIt {
@@ -475,10 +506,10 @@ func (a *App) switchToWiFi(serial string) {
 		addr, err := client.SwitchToWiFi(ctx, serial)
 		mygo.RunOnMain(func() {
 			if err != nil {
-				a.alert("Could not switch to Wi-Fi", err.Error())
+				a.alert(locales.CouldNotSwitchWiFi(), err.Error())
 				return
 			}
-			a.notify("Connected over Wi-Fi", "You can unplug the cable: "+addr)
+			a.notify(locales.ConnectedOverWiFi(), locales.UnplugCable(addr))
 		})
 	}()
 }
@@ -552,7 +583,7 @@ func (a *App) alert(title, detail string) {
 			Type:    mygo.MessageWarning,
 			Message: title,
 			Detail:  detail,
-			Buttons: []string{"OK"},
+			Buttons: []string{locales.Ok()},
 		})
 	}()
 }

@@ -188,11 +188,21 @@ func (q QRPairing) Payload() string {
 	return fmt.Sprintf("WIFI:T:ADB;S:%s;P:%s;;", q.Name, q.Password)
 }
 
-// Wait waits for the phone that scanned the code, pairs with it and
+// PairStage is how far pairing got, which the progress functions of
+// PairQR and PairCode hear.
+type PairStage int
+
+const (
+	PairWaiting    PairStage = iota // for the phone to scan the code
+	PairPairing                     // with the phone
+	PairConnecting                  // to the phone, paired
+)
+
+// PairQR waits for the phone that scanned the code, pairs with it and
 // connects to it. It returns the address it connected to.
-func (c *Client) PairQR(ctx context.Context, q QRPairing, progress func(string)) (string, error) {
+func (c *Client) PairQR(ctx context.Context, q QRPairing, progress func(PairStage)) (string, error) {
 	var svc MDNSService
-	progress("Waiting for the phone to scan the code…")
+	progress(PairWaiting)
 	found := waitFor(ctx, time.Second, func() bool {
 		list, err := c.MDNSServices(ctx)
 		if err != nil {
@@ -209,23 +219,23 @@ func (c *Client) PairQR(ctx context.Context, q QRPairing, progress func(string))
 	if !found {
 		return "", ctx.Err()
 	}
-	progress("Pairing…")
+	progress(PairPairing)
 	if err := c.Pair(ctx, svc.Address, q.Password); err != nil {
 		return "", err
 	}
-	progress("Connecting…")
+	progress(PairConnecting)
 	return c.connectAfterPairing(ctx, hostOf(svc.Address))
 }
 
 // PairCode pairs with the code Android shows under "Pair device with
 // pairing code", then connects to the phone. connectAddr may be empty: the
 // phone's connect service is then found over mDNS.
-func (c *Client) PairCode(ctx context.Context, pairAddr, code, connectAddr string, progress func(string)) (string, error) {
-	progress("Pairing…")
+func (c *Client) PairCode(ctx context.Context, pairAddr, code, connectAddr string, progress func(PairStage)) (string, error) {
+	progress(PairPairing)
 	if err := c.Pair(ctx, pairAddr, code); err != nil {
 		return "", err
 	}
-	progress("Connecting…")
+	progress(PairConnecting)
 	if connectAddr != "" {
 		if err := c.Connect(ctx, connectAddr); err != nil {
 			return "", err

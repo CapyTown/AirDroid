@@ -182,6 +182,7 @@ phone encoded, the same bytes the decoder receives, as scrcpy's own
 | `internal/media` | H.264/H.265: Annex B, parameter sets, SPS parsing, avcC/hvcC |
 | `internal/mp4` | MP4/QuickTime passthrough writer |
 | `internal/config` | settings, defaults and per-device options |
+| `locales/` | the app's texts in English (`en.json`) and Simplified Chinese (`zh-Hans.json`), and the accessors `mygo generate` writes from them |
 | `resources/` | the app icon, and per platform the bundled adb, scrcpy and FFmpeg (staged, not committed) |
 | `scripts/bundle-*.py` | stage adb, scrcpy and FFmpeg for a platform |
 | `mygo.json` | the app's name, identifier, version and Info.plist keys |

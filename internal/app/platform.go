@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/CapyTown/AirDroid/internal/adb"
+	"github.com/CapyTown/AirDroid/locales"
 )
 
 // goos is the platform the app's text follows; tests set it.
@@ -33,11 +34,11 @@ func keys(spec string) string {
 func revealLabel() string {
 	switch goos {
 	case "darwin":
-		return "Show in Finder"
+		return locales.ShowInFinder()
 	case "windows":
-		return "Show in Explorer"
+		return locales.ShowInExplorer()
 	}
-	return "Show in Folder"
+	return locales.ShowInFolder()
 }
 
 // hasDock reports a Dock that AirDroid's icon can leave, on macOS.
@@ -46,9 +47,9 @@ func hasDock() bool { return goos == "darwin" }
 // thisComputer is how the app's text names the computer it runs on.
 func thisComputer() string {
 	if goos == "darwin" {
-		return "this Mac"
+		return locales.ThisMac()
 	}
-	return "this computer"
+	return locales.ThisComputer()
 }
 
 // deviceSubtitle is what follows a device's name in its window's title
