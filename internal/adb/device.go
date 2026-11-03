@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"math/big"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -16,9 +17,13 @@ type Info struct {
 	Manufacturer string // "OnePlus"
 	Brand        string
 	Model        string // "PJF110"
-	MarketName   string // "OnePlus Ace 3V"
-	Release      string // "15"
-	SDK          string // "35"
+	MarketName   string // "OnePlus Ace 3V", the first of MarketNames
+	// MarketNames are the names the device is sold by, as its properties
+	// give them, in one language or several: "一加 Ace 3V" and "OnePlus
+	// Ace 3V". NameIn picks one for a language.
+	MarketNames []string
+	Release     string // "15"
+	SDK         string // "35"
 }
 
 // Name is the device's name as people know it.
@@ -88,6 +93,14 @@ var marketNameProps = []string{
 	"ro.semc.product.name",
 }
 
+// marketEnglishNameProps hold the English name where makers keep a local
+// one in the props above, as OPPO, OnePlus and realme do in China.
+var marketEnglishNameProps = []string{
+	"ro.vendor.oplus.market.enname",
+	"ro.oppo.market.enname",
+	"ro.vendor.realme.market.enname",
+}
+
 // InfoFromProps builds Info out of getprop's properties.
 func InfoFromProps(serial string, p map[string]string) Info {
 	i := Info{
@@ -99,9 +112,8 @@ func InfoFromProps(serial string, p map[string]string) Info {
 		Release:      first(p, "ro.build.version.release_or_codename", "ro.build.version.release"),
 		SDK:          p["ro.build.version.sdk"],
 	}
-	i.MarketName = first(p, marketNameProps...)
-	if i.MarketName == i.Model {
-		i.MarketName = ""
+	for _, k := range append(append([]string{}, marketNameProps...), marketEnglishNameProps...) {
+		i.addMarketName(p[k])
 	}
 	return i
 }
@@ -126,9 +138,8 @@ func (c *Client) Info(ctx context.Context, serial string) (Info, error) {
 		// The name the user gave the phone, as "Ada's Pixel", is better than
 		// a model number.
 		if out, err := c.Shell(ctx, serial, "settings", "get", "global", "device_name"); err == nil {
-			out = strings.TrimSpace(out)
-			if out != "" && out != "null" && !strings.EqualFold(out, info.Model) {
-				info.MarketName = out
+			if out = strings.TrimSpace(out); out != "null" {
+				info.addMarketName(out)
 			}
 		}
 	}
@@ -276,4 +287,39 @@ func randomString(n int) string {
 		b[i] = alphabet[k.Int64()]
 	}
 	return string(b)
+}
+
+var keyguardRe = regexp.MustCompile(`(?i)(keyguardShowing|ShowingLockscreen|DreamingLockscreen)=true`)
+
+// Locked reports whether the device shows its lock screen, waiting for a
+// PIN, a pattern, a fingerprint or a face, as Android's trust manager
+// says, else its window manager.
+func (c *Client) Locked(ctx context.Context, serial string) (bool, error) {
+	if out, err := c.Shell(ctx, serial, "dumpsys", "trust"); err == nil {
+		if locked, ok := ParseTrustLocked(out); ok {
+			return locked, nil
+		}
+	}
+	out, err := c.Shell(ctx, serial, "dumpsys", "window")
+	if err != nil {
+		return false, err
+	}
+	return keyguardRe.MatchString(out), nil
+}
+
+// ParseTrustLocked reads whether the current user's device is locked in
+// the output of `dumpsys trust`.
+func ParseTrustLocked(out string) (locked, ok bool) {
+	for _, line := range strings.Split(out, "\n") {
+		if !strings.Contains(line, "(current)") {
+			continue
+		}
+		i := strings.Index(line, "deviceLocked=")
+		if i < 0 {
+			continue
+		}
+		v := line[i+len("deviceLocked="):]
+		return strings.HasPrefix(v, "1") || strings.HasPrefix(v, "true"), true
+	}
+	return false, false
 }

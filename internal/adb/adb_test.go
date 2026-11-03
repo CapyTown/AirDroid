@@ -104,3 +104,51 @@ func TestConnectResult(t *testing.T) {
 		}
 	}
 }
+
+func TestNameIn(t *testing.T) {
+	// A OnePlus sold in China: a Chinese name and an English one.
+	i := InfoFromProps("x", map[string]string{
+		"ro.product.manufacturer":       "OnePlus",
+		"ro.product.model":              "PJF110",
+		"ro.vendor.oplus.market.name":   "一加 Ace 3V",
+		"ro.vendor.oplus.market.enname": "OnePlus Ace 3V",
+		"ro.build.version.release":      "15",
+	})
+	for lang, want := range map[string]string{"zh-Hans": "一加 Ace 3V", "en": "OnePlus Ace 3V", "": "OnePlus Ace 3V"} {
+		if got := i.NameIn(lang); got != want {
+			t.Errorf("%q: %q, want %q", lang, got, want)
+		}
+	}
+	if s := i.SubtitleIn("zh-Hans"); s != "一加 · PJF110 · Android 15" {
+		t.Errorf("subtitle %q", s)
+	}
+	// Only a Chinese name: the maker is translated for English.
+	i = InfoFromProps("x", map[string]string{"ro.product.model": "PJF110", "ro.vendor.oplus.market.name": "一加 Ace 3V"})
+	if got := i.NameIn("en"); got != "OnePlus Ace 3V" {
+		t.Errorf("en from Chinese: %q", got)
+	}
+	// Only an English name: the maker is translated for Chinese.
+	i = InfoFromProps("x", map[string]string{"ro.product.model": "2311DRK48C", "ro.product.marketname": "Xiaomi 14"})
+	if got := i.NameIn("zh-Hans"); got != "小米 14" {
+		t.Errorf("zh from English: %q", got)
+	}
+	if got := i.NameIn("en"); got != "Xiaomi 14" {
+		t.Errorf("en: %q", got)
+	}
+}
+
+func TestParseTrustLocked(t *testing.T) {
+	out := `Trust manager state:
+ User "Owner" (id=0, flags=0x13) (current): trusted=0, trustManaged=0, deviceLocked=1, isActiveUnlockRunning=0, strongAuthRequired=0x0
+ User "Work" (id=10, flags=0x30): trusted=0, trustManaged=0, deviceLocked=0
+`
+	if locked, ok := ParseTrustLocked(out); !ok || !locked {
+		t.Errorf("locked %v ok %v", locked, ok)
+	}
+	if locked, ok := ParseTrustLocked(strings.Replace(out, "deviceLocked=1", "deviceLocked=0", 1)); !ok || locked {
+		t.Errorf("unlocked: locked %v ok %v", locked, ok)
+	}
+	if _, ok := ParseTrustLocked("nothing"); ok {
+		t.Error("no current user")
+	}
+}

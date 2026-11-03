@@ -45,6 +45,7 @@ type mirror struct {
 	identity string
 	title    string
 	subtitle string
+	info     adb.Info
 	win      *mygo.Window
 
 	// Main thread.
@@ -68,8 +69,9 @@ type mirror struct {
 	recBusy       bool // between a click and the recorder's answer
 	shotBusy      bool
 	flashAt       time.Time
-	settingsWin   *mygo.Window // this device's settings, while open
-	selfResize    time.Time    // when AirDroid last sized the window
+	settingsWin   *mygo.Window       // this device's settings, while open
+	screenWatch   context.CancelFunc // the watch of the lock screen, while the screen is to be off
+	selfResize    time.Time          // when AirDroid last sized the window
 	resizeGen     int
 	pendingToasts []toast
 	sized         bool // the window was fitted to the stream once
@@ -151,8 +153,9 @@ func (m *mirror) setInfo(info adb.Info) {
 	if info.Serial == "" {
 		return
 	}
-	m.title = info.Name()
-	m.subtitle = info.Subtitle()
+	m.info = info
+	m.title = info.NameIn(mygo.App.Locale())
+	m.subtitle = deviceSubtitle(info, m.serial)
 	if m.identity == "" {
 		m.identity = info.Identity()
 	}
@@ -166,6 +169,7 @@ func (m *mirror) setInfo(info adb.Info) {
 
 // connect starts a session with the current options.
 func (m *mirror) connect() {
+	m.stopWatchingScreen()
 	if m.decErr != "" {
 		m.state, m.stateMsg = stateDisconnected, m.decErr
 		return
@@ -284,6 +288,7 @@ func (m *mirror) shutdown() {
 		return
 	}
 	m.closed = true
+	m.stopWatchingScreen()
 	if m.settingsWin != nil {
 		m.settingsWin.Close()
 	}
@@ -384,7 +389,7 @@ func (p *pipeline) VideoFrame(f scrcpy.VideoFrame) {
 			}
 			p.m.state = stateStreaming
 			if screenOff {
-				p.m.send(scrcpy.SetDisplayPower(false))
+				p.m.watchScreen()
 			}
 			p.m.videoFocus.Focus()
 		})
@@ -463,7 +468,7 @@ func (b *frameMailbox) show() {
 // --- Window size ----------------------------------------------------------
 
 const (
-	chromeTop    = 56
+	chromeTop    = 40
 	chromeBottom = 12
 	chromeLeft   = 12
 	chromeGap    = 12
@@ -710,13 +715,79 @@ func (m *mirror) setOptions(o config.MirrorOptions) {
 		m.win.SetAlwaysOnTop(o.AlwaysOnTop)
 	}
 	if o.TurnScreenOff != old.TurnScreenOff && m.state == stateStreaming {
-		m.send(scrcpy.SetDisplayPower(!o.TurnScreenOff))
+		if o.TurnScreenOff {
+			m.watchScreen()
+		} else {
+			m.stopWatchingScreen()
+			m.send(scrcpy.SetDisplayPower(true))
+		}
 	}
 	if old.RequiresRestart(o) && !m.closed {
 		if m.recording {
 			m.rec.stop()
 		}
 		m.connect()
+	}
+}
+
+// --- The phone's screen ------------------------------------------------------
+
+// toggleScreenOff turns the phone's screen off while mirroring, or on
+// again, and keeps the choice as this device's.
+func (m *mirror) toggleScreenOff() {
+	o := m.opts
+	o.TurnScreenOff = !o.TurnScreenOff
+	m.applyOptions(o)
+}
+
+// screenPoll is how often AirDroid looks at the lock screen while the
+// phone's screen is to be off.
+const screenPoll = 1500 * time.Millisecond
+
+// watchScreen keeps the phone's screen off while mirroring, except while
+// the lock screen shows: then it is on, for a fingerprint, a face or a
+// PIN on the phone itself. Once the phone is unlocked, the screen goes off
+// again, by itself.
+func (m *mirror) watchScreen() {
+	m.stopWatchingScreen()
+	ctx, cancel := context.WithCancel(context.Background())
+	m.screenWatch = cancel
+	client, serial, gen := m.app.adb, m.serial, m.gen
+	go func() {
+		const unknown, on, off = 0, 1, 2
+		sent := unknown
+		for {
+			qctx, qcancel := context.WithTimeout(ctx, 5*time.Second)
+			locked, err := client.Locked(qctx, serial)
+			qcancel()
+			if ctx.Err() != nil {
+				return
+			}
+			want := off
+			if err == nil && locked {
+				want = on
+			}
+			if want != sent {
+				sent = want
+				m.win.Update(func() {
+					if ctx.Err() == nil && m.gen == gen {
+						m.send(scrcpy.SetDisplayPower(want == on))
+					}
+				})
+			}
+			select {
+			case <-ctx.Done():
+				return
+			case <-time.After(screenPoll):
+			}
+		}
+	}()
+}
+
+func (m *mirror) stopWatchingScreen() {
+	if m.screenWatch != nil {
+		m.screenWatch()
+		m.screenWatch = nil
 	}
 }
 

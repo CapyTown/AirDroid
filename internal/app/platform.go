@@ -3,6 +3,8 @@ package app
 import (
 	"runtime"
 	"strings"
+
+	"github.com/CapyTown/AirDroid/internal/adb"
 )
 
 // goos is the platform the app's text follows; tests set it.
@@ -47,4 +49,13 @@ func thisComputer() string {
 		return "this Mac"
 	}
 	return "this computer"
+}
+
+// deviceSubtitle is what follows a device's name in its window's title
+// bar: "Android 15 · e28ce14b", its Android version and adb serial.
+func deviceSubtitle(info adb.Info, serial string) string {
+	if info.Release == "" {
+		return serial
+	}
+	return "Android " + info.Release + " · " + serial
 }

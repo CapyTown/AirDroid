@@ -144,7 +144,7 @@ func mirrorOptionsForm(c *ui.Context, o *config.MirrorOptions, compact bool) boo
 	sectionHeading(c, "Phone")
 	section(c, func() {
 		changed = switchRow(c, "audio", "Device audio", sub("Play the phone's sound on "+thisComputer()+" (Android 11 and later)."), &o.Audio) || changed
-		changed = switchRow(c, "screenOff", "Turn the phone's screen off", sub("Mirroring goes on with the phone's display dark."), &o.TurnScreenOff) || changed
+		changed = switchRow(c, "screenOff", "Turn the phone's screen off", sub("Dark while mirroring; lit while the phone is locked, to unlock it there."), &o.TurnScreenOff) || changed
 		changed = switchRow(c, "stayAwake", "Stay awake", sub("Keep the phone awake while it is plugged in."), &o.StayAwake) || changed
 		changed = switchRow(c, "touches", "Show touches", sub("Show where the phone is touched, on its screen."), &o.ShowTouches) || changed
 		changed = switchRow(c, "onTop", "Keep window on top", sub("Float the mirror over other windows."), &o.AlwaysOnTop) || changed

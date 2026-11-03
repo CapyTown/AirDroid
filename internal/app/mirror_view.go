@@ -37,15 +37,19 @@ func (m *mirror) view(c *ui.Context) {
 	W, H := c.Size()
 	bar := c.TitleBar()
 	ui.Column(c).Fill().Children(func() {
-		// Title bar: drag to move, double-click to zoom.
-		ui.Row(c).FillWidth().Height(chromeTop).PaddingStart(bar.Left + 14).PaddingEnd(bar.Right + 14).
-			AlignItems(ui.Center).DragWindow().Children(func() {
-			ui.Column(c).Gap(1).Shrink(1).Children(func() {
-				ui.Text(c, m.title).FontSize(15).Bold().SingleLine().Ellipsis("…")
-				if m.subtitle != "" {
-					ui.Text(c, m.subtitle).FontSize(12).TextColor(t.TextMuted).SingleLine().Ellipsis("…")
-				}
-			})
+		// Title bar, one line centered on the window controls: the device's
+		// name in bold, then its Android version and adb serial. Drag to
+		// move, double-click to zoom.
+		rowH := bar.Height
+		if rowH < 24 {
+			rowH = 28
+		}
+		ui.Row(c).FillWidth().Height(chromeTop).Padding(0, bar.Right+14, max(0, chromeTop-rowH), bar.Left+10).
+			AlignItems(ui.Center).Gap(8).DragWindow().Children(func() {
+			ui.Text(c, m.title).FontSize(14).Bold().SingleLine().Ellipsis("…").Shrink(0)
+			if m.subtitle != "" {
+				ui.Text(c, m.subtitle).FontSize(13).TextColor(t.TextMuted).SingleLine().Ellipsis("…").Shrink(1)
+			}
 		})
 
 		// The picture, as large as the window lets it be at its aspect.
@@ -147,6 +151,11 @@ func (m *mirror) sidebarView(c *ui.Context, vh float32) {
 					Label("Recording for " + d.Truncate(time.Second).String()).MarginY(-4)
 				c.After(time.Second - d%time.Second)
 			}
+			screenTip := "Turn the phone's screen off, on again while it is locked"
+			if m.opts.TurnScreenOff {
+				screenTip = "Turn the phone's screen back on"
+			}
+			m.sideButton(c, "screen", "Phone screen off", screenTip, iconScreenOff, m.opts.TurnScreenOff, false, m.state != stateStreaming && !m.opts.TurnScreenOff, m.toggleScreenOff)
 			m.sideButton(c, "settings", "Settings", "Mirroring settings  "+keys("I"), iconSettings, m.settingsWin != nil, false, false, m.toggleSettings)
 		})
 		pill(c, func() {
@@ -172,12 +181,17 @@ func (m *mirror) sideButton(c *ui.Context, key, label, tip string, icon *ui.SVG,
 	case disabled:
 	case b.Pressed():
 		b.Background(t.Text.Alpha(0.14))
+	case active && key == "screen":
+		b.Background(t.Accent.Alpha(0.16))
 	case b.Hovered() || (active && key == "settings"):
 		b.Background(t.Text.Alpha(0.07))
 	}
 	color := t.Text
 	if active && key == "record" {
 		color = recordGreen
+	}
+	if active && key == "screen" {
+		color = t.Accent
 	}
 	if disabled {
 		color = t.Text.Alpha(0.3)

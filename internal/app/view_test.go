@@ -46,7 +46,7 @@ func testMirror(t *testing.T) *mirror {
 		app:      a,
 		serial:   "R5CT",
 		title:    "OnePlus Ace 3V",
-		subtitle: "OnePlus · PJF110 · Android 15",
+		subtitle: "Android 15 · e28ce14b",
 		keysDown: map[ui.Key]int{},
 		frameW:   1080,
 		frameH:   2400,
