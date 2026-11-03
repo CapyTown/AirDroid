@@ -152,7 +152,8 @@ Settings has its pages in a sidebar on the left, the page on the right.
 
 | | | |
 |---|---|---|
-| macOS | `airdroid-<version>.dmg` | Drag **AirDroid** to Applications and open it. Its icon appears in the menu bar. |
+| macOS, Apple silicon | `airdroid-<version>-arm64.dmg` | Smaller, for M1 and later. Drag **AirDroid** to Applications and open it. Its icon appears in the menu bar. |
+| macOS, any Mac | `airdroid-<version>.dmg` | Universal: Apple silicon and Intel. Installs as above. |
 | Windows | `airdroid-setup-<version>-amd64.exe` | Run the installer, then open AirDroid from the Start menu. Its icon appears in the system tray. |
 | Linux | `airdroid_<version>_amd64.deb`, or `airdroid-<version>-linux-amd64.tar.gz` | Install the package (`sudo apt install ./airdroid_*.deb`), or unpack the archive and run `sh install.sh`. Open AirDroid from your applications. |
 

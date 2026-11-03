@@ -112,11 +112,12 @@ is pushed, and publishes them:
 2. Commit, then tag the commit `v<version>-<buildVersion>`, as `v0.1.0-2`,
    and push the tag. The workflow refuses a tag that does not match
    `mygo.json`.
-3. Three runners build at once, each for its platform:
+3. Four runners build at once:
 
    | Runner | Builds |
    |---|---|
-   | macOS | the universal `.dmg` |
+   | macOS | the Apple silicon `.dmg`, `airdroid-<version>-arm64.dmg` |
+   | macOS | the universal `.dmg`, `airdroid-<version>.dmg` |
    | Windows | the x64 installer, `airdroid-setup-<version>-amd64.exe` |
    | Ubuntu | the x64 `.deb` and `.tar.gz` |
 

@@ -22,11 +22,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          - name: macOS Apple silicon DMG
+            os: macos-latest
+            platform: darwin/arm64
+            adb: darwin
+            artifact: macos-arm64
+            path: build/darwin-arm64/*.dmg
           - name: macOS universal DMG
             os: macos-latest
             platform: darwin/universal
             adb: darwin
-            artifact: macos
+            artifact: macos-universal
             path: build/darwin-universal/*.dmg
           - name: Windows x64 installer
             os: windows-latest
