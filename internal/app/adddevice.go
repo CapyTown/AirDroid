@@ -120,7 +120,7 @@ func (d *addDeviceWindow) usb(c *ui.Context) {
 		ui.Column(c).PaddingY(12).Gap(10).Children(func() {
 			step(c, "1", "On the phone, open Settings › About phone and tap Build number seven times, to turn on Developer options.")
 			step(c, "2", "In Settings › System › Developer options, turn on USB debugging.")
-			step(c, "3", "Plug the phone into this Mac, and tap Allow when it asks to allow USB debugging.")
+			step(c, "3", "Plug the phone into this computer, and tap Allow when it asks to allow USB debugging.")
 		})
 	})
 	ui.Text(c, "Devices").Bold().FontSize(12.5).PaddingStart(4)
@@ -243,7 +243,7 @@ func (d *addDeviceWindow) qrPage(c *ui.Context) {
 			}
 		})
 		ui.Column(c).Grow(1).Shrink(1).Gap(10).Children(func() {
-			step(c, "1", "Join the phone and this Mac to the same Wi-Fi network.")
+			step(c, "1", "Join the phone and this computer to the same Wi-Fi network.")
 			step(c, "2", "On the phone, open Developer options › Wireless debugging (Android 11 and later).")
 			step(c, "3", "Tap Pair device with QR code, and scan this code.")
 		})

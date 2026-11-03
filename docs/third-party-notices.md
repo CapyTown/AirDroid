@@ -2,12 +2,34 @@
 
 ## scrcpy
 
-AirDroid bundles scrcpy, scrcpy-server and adb from scrcpy's official macOS
-releases (https://github.com/Genymobile/scrcpy), downloaded by
-`scripts/fetch-scrcpy.sh`. scrcpy is Copyright (C) 2018 Genymobile and
-Copyright (C) 2018-2026 Romain Vimont, licensed under the Apache License 2.0;
-its license ships in the app as `scrcpy-LICENSE.txt`. adb is part of the
-Android SDK Platform-Tools, licensed under the Apache License 2.0.
+AirDroid bundles scrcpy and scrcpy-server from scrcpy's official releases
+for macOS, Windows and Linux (https://github.com/Genymobile/scrcpy),
+downloaded and checked against their SHA-256 by `scripts/bundle-scrcpy.py`.
+scrcpy is Copyright (C) 2018 Genymobile and Copyright (C) 2018-2026 Romain
+Vimont, licensed under the Apache License 2.0; its licence ships in the app
+beside it, in `scrcpy/`.
+
+## Android SDK Platform-Tools
+
+AirDroid bundles adb from Google's Android SDK Platform-Tools
+(https://developer.android.com/tools/releases/platform-tools), downloaded by
+`scripts/bundle-adb.py`, licensed under the Apache License 2.0; its
+`NOTICE.txt` ships in the app beside it, in `platform-tools/`.
+
+## FFmpeg
+
+On Windows and Linux, AirDroid bundles an FFmpeg executable, which it runs as
+a separate program to decode the mirrored screen. It comes from the
+ffmpeg-static project's release b6.1.1
+(https://github.com/eugeneware/ffmpeg-static/releases/tag/b6.1.1), built by
+https://www.gyan.dev/ffmpeg/builds/ (Windows) and
+https://johnvansickle.com/ffmpeg/ (Linux) from FFmpeg 6.1.1
+(https://ffmpeg.org/releases/ffmpeg-6.1.1.tar.xz), downloaded and checked
+against their SHA-256 by `scripts/bundle-ffmpeg.py`. These builds are
+licensed under the GNU General Public License version 3; the licence, the
+builders' notes and where to get the source ship in the app beside the
+executable, in `ffmpeg/`. AirDroid's own code is MIT-licensed and does not link
+to FFmpeg. The macOS app contains no FFmpeg: it decodes with VideoToolbox.
 
 AirDroid implements a client of scrcpy-server's protocol; it does not contain
 scrcpy's client code.

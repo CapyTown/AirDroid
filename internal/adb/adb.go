@@ -19,6 +19,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/CapyTown/AirDroid/internal/proc"
 )
 
 // Client runs adb commands with one executable.
@@ -46,7 +48,7 @@ func (c *Client) SetPath(path string) {
 
 // Command returns an exec.Cmd running adb with args.
 func (c *Client) Command(ctx context.Context, args ...string) *exec.Cmd {
-	cmd := exec.CommandContext(ctx, c.Path(), args...)
+	cmd := proc.Command(ctx, c.Path(), args...)
 	cmd.Env = os.Environ()
 	return cmd
 }

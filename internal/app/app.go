@@ -102,7 +102,9 @@ func New() (*App, error) {
 // Start creates the tray icon and starts watching for devices. It runs on
 // the main thread.
 func (a *App) Start() {
-	mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
+	if hasDock() {
+		mygo.App.SetActivationPolicy(mygo.ActivationPolicyAccessory)
+	}
 	mygo.App.SetMenu(a.menuBar())
 	mygo.App.OnWindowAllClosed(func() {}) // a menu bar app lives on
 	mygo.App.OnBeforeQuit(func(*mygo.QuitEvent) { a.quitting = true })
@@ -175,30 +177,65 @@ func bundled(rel ...string) string {
 	return ""
 }
 
+// exe names a program as the platform does: "adb.exe" on Windows.
+func exe(name string) string {
+	if runtime.GOOS == "windows" {
+		return name + ".exe"
+	}
+	return name
+}
+
+// scrcpyDir is where the bundled scrcpy is: one directory per processor on
+// macOS, which runs either.
+func scrcpyDir() string {
+	if runtime.GOOS == "darwin" {
+		return filepath.Join("scrcpy", runtime.GOARCH)
+	}
+	return "scrcpy"
+}
+
 // BundledADB is the adb shipped with AirDroid.
-func BundledADB() string { return bundled("bin", "adb") }
+func BundledADB() string { return bundled("platform-tools", exe("adb")) }
 
 // BundledScrcpy is the scrcpy-server shipped with AirDroid.
-func BundledScrcpy() string { return bundled("scrcpy-server") }
+func BundledScrcpy() string { return bundled(scrcpyDir(), "scrcpy-server") }
 
 // BundledScrcpyBinary is the scrcpy executable shipped with AirDroid.
-func BundledScrcpyBinary() string { return bundled("bin", "scrcpy") }
+func BundledScrcpyBinary() string { return bundled(scrcpyDir(), exe("scrcpy")) }
+
+// BundledFFmpeg is the FFmpeg that decodes video on Windows and Linux.
+func BundledFFmpeg() string { return bundled("ffmpeg", exe("ffmpeg")) }
 
 func lookTool(name string) string {
 	if p, err := exec.LookPath(name); err == nil {
 		return p
 	}
 	home, _ := os.UserHomeDir()
-	for _, dir := range []string{
-		"/opt/homebrew/bin", "/usr/local/bin",
-		filepath.Join(home, "Library", "Android", "sdk", "platform-tools"),
-	} {
-		p := filepath.Join(dir, name)
+	var dirs []string
+	switch runtime.GOOS {
+	case "darwin":
+		dirs = []string{"/opt/homebrew/bin", "/usr/local/bin", filepath.Join(home, "Library", "Android", "sdk", "platform-tools")}
+	case "windows":
+		dirs = []string{filepath.Join(os.Getenv("LOCALAPPDATA"), "Android", "Sdk", "platform-tools")}
+	default:
+		dirs = []string{"/usr/local/bin", "/usr/bin", filepath.Join(home, "Android", "Sdk", "platform-tools")}
+	}
+	for _, dir := range dirs {
+		p := filepath.Join(dir, exe(name))
 		if _, err := os.Stat(p); err == nil {
 			return p
 		}
 	}
 	return ""
+}
+
+// ffmpegPath is the FFmpeg that decodes video where there is no
+// VideoToolbox: the bundled one, else one installed.
+func (a *App) ffmpegPath() string {
+	if p := BundledFFmpeg(); p != "" {
+		return p
+	}
+	return lookTool("ffmpeg")
 }
 
 func (a *App) adbPath() string {
@@ -495,6 +532,9 @@ func (a *App) mirrorOf(w *mygo.Window) *mirror {
 // windowsChanged shows AirDroid in the Dock while it has windows open, unless
 // the user wants it there always.
 func (a *App) windowsChanged() {
+	if !hasDock() {
+		return
+	}
 	open := len(a.mirrors) > 0 || a.settings != nil || a.add != nil
 	if open || !a.cfg.Get().HideDockIconWhenClosed {
 		if mygo.App.ActivationPolicy() != mygo.ActivationPolicyRegular {

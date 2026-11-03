@@ -2,11 +2,16 @@
 
 ## Requirements
 
-- **Go 1.27.3 or later** (`GOTOOLCHAIN=auto` downloads it). Nothing else:
-  AirDroid builds with `CGO_ENABLED=0`, from macOS, Linux or Windows.
-- **A Mac** to run it, and to make the disk image and sign the app.
-- **Optional:** [ffmpeg](https://ffmpeg.org), which the tests use to check the
-  movies AirDroid writes; without it those tests are skipped.
+- **Go 1.27.3 or later** (`GOTOOLCHAIN=auto` downloads it). AirDroid builds
+  with `CGO_ENABLED=0`, so any of macOS, Windows and Linux builds the app of
+  every platform.
+- **Python 3**, for the scripts that stage adb, scrcpy and FFmpeg.
+- **The platform itself** to run the app, and for its installer: a Mac for
+  the disk image, NSIS for the Windows installer (`mygo build` downloads it
+  on Windows).
+- **Optional:** [ffmpeg](https://ffmpeg.org) with libx264, which the tests use
+  to encode streams and check the movies AirDroid writes; without it those
+  tests are skipped.
 
 The MyGo CLI is a tool of the module: `go tool mygo` runs the version
 `go.mod` pins.
@@ -14,35 +19,49 @@ The MyGo CLI is a tool of the module: `go tool mygo` runs the version
 ## Commands
 
 ```sh
-make deps    # scrcpy 5.0.1 and adb into resources/ (SHA-256 checked)
+make deps    # adb, scrcpy and FFmpeg for this platform into resources/
 make dev     # run AirDroid, rebuilt as its sources change (go tool mygo dev)
-make build   # build/darwin-universal/AirDroid.app and its .dmg
+make build   # the app and its installer for this platform, in build/
 make test    # go test ./...
-make vet     # go vet for darwin/arm64 and darwin/amd64, and mygo vet
+make vet     # go vet for macOS, Windows and Linux, and mygo vet
 ```
 
-`make deps` runs `scripts/fetch-scrcpy.sh`. It downloads scrcpy's official
-macOS releases and lays them out where `mygo build` bundles them:
+`make deps` runs the three bundling scripts for the platform it is on;
+`PLATFORM=windows make deps` stages another. Each script takes `darwin`,
+`windows` or `linux`:
+
+```sh
+python3 scripts/bundle-adb.py linux       # Google's platform-tools
+python3 scripts/bundle-scrcpy.py linux    # scrcpy 5.0.1, SHA-256 pinned
+python3 scripts/bundle-ffmpeg.py linux    # FFmpeg 6.1.1, SHA-256 pinned (none for darwin)
+```
+
+They lay the files out where `mygo build` bundles them, one directory per
+platform:
 
 ```
-resources/darwin-arm64/bin/scrcpy         Apple silicon
-resources/darwin-amd64/bin/scrcpy         Intel
-resources/darwin/bin/adb                  universal already
-resources/darwin/scrcpy-server            pushed to the phone
-resources/darwin/scrcpy-server.version    the version it expects
+resources/darwin/platform-tools/adb
+resources/darwin/scrcpy/arm64/{scrcpy,scrcpy-server,origin.json}   Apple silicon
+resources/darwin/scrcpy/amd64/{scrcpy,scrcpy-server,origin.json}   Intel
+resources/windows/platform-tools/adb.exe (+ AdbWin*.dll)
+resources/windows/scrcpy/{scrcpy.exe,scrcpy-server,origin.json,*.dll}
+resources/windows/ffmpeg/ffmpeg.exe
+resources/linux/platform-tools/adb
+resources/linux/scrcpy/{scrcpy,scrcpy-server,origin.json}
+resources/linux/ffmpeg/ffmpeg
 ```
 
-A universal build joins the two `scrcpy` with lipo. These files are not
-committed. To bundle another release, set `SCRCPY_VERSION` (the checksums are
-only checked for 5.0.1).
+`origin.json` records the scrcpy version, which scrcpy-server must be told.
+These files are not committed. The scripts take local archives too
+(`--archive`, `--from-directory`, `--from-sdk`), for builds without network.
 
-Without them, as under `go run .`, AirDroid looks for `adb` and `scrcpy` on
-the `PATH`, in Homebrew's directories and in Android Studio's SDK. Settings ›
-Advanced chooses others.
+Without them, as under `go run .` before `make deps`, AirDroid looks for
+`adb`, `scrcpy` and `ffmpeg` on the `PATH`, in Homebrew's directories and in
+Android Studio's SDK. Settings › Advanced chooses others.
 
 Set `MYGO_DEBUG=1` for debug logs, which include scrcpy-server's output. They
-go to `~/Library/Logs/AirDroid/airdroid.log`, and to the terminal in
-development builds.
+go to `airdroid.log` in the app's logs directory (`~/Library/Logs/AirDroid`
+on macOS), and to the terminal in development builds.
 
 ## Tests
 
@@ -55,6 +74,8 @@ development builds.
     scrcpy-server 5.0.1. It covers the version-mismatch retry, the reverse
     tunnel, session headers, config and frames, raw audio, the device's
     clipboard and control messages.
+- **`internal/ffdec`:** a stream ffmpeg encodes, decoded by the FFmpeg
+  decoder, scaled, with every frame out while the input stays open.
 - **`internal/media`:** Annex B parsing and conversion, and SPS sizes of real
   H.264 and H.265 streams from ffmpeg.
 - **`internal/mp4`:** H.264 and H.265 MP4 and MOV-with-PCM movies, checked with
@@ -67,8 +88,9 @@ development builds.
 - **`internal/adb`, `internal/config`:** parsers, host protocol framing,
   device names, settings.
 
-The VideoToolbox decoder (`internal/vt`) compiles everywhere but runs only on
-macOS; try it on a Mac with a phone.
+The VideoToolbox decoder (`internal/vt`) builds only for macOS; try it on a
+Mac with a phone. The end-to-end session test runs a shell script as `adb`,
+and is skipped on Windows.
 
 ## The README's screenshots
 
@@ -82,26 +104,30 @@ AIRDROID_DOCS_IMAGES=$PWD/docs/images go test -run DocsImages ./internal/app
 
 ## Releasing
 
-Releases are built and published by `.github/workflows/release.yml` when a
-tag is pushed:
+`.github/workflows/release.yml` builds the apps of every platform when a tag
+is pushed, and publishes them:
 
 1. Set `version` in `mygo.json`, and bump `buildVersion` (a whole number,
    one more for each release).
-2. Commit, then tag the commit `v<version>-<buildVersion>`, as `v0.1.0-1`,
+2. Commit, then tag the commit `v<version>-<buildVersion>`, as `v0.1.0-2`,
    and push the tag. The workflow refuses a tag that does not match
    `mygo.json`.
-3. On a macOS runner, the workflow:
-   - runs `go test`, `go vet` and `mygo vet`;
-   - bundles adb and scrcpy (`scripts/fetch-scrcpy.sh`);
-   - builds the universal app and its `.dmg`, signed ad hoc
-     (`-sign=- -skip-notarize`).
-4. A last job publishes a GitHub release of the tag with the `.dmg`.
+3. Three runners build at once, each for its platform:
 
-The workflow can also run by hand (*Actions › Release › Run workflow*). It
-builds the `.dmg` as an artifact; with *Publish* checked, it also tags the
-commit `v<version>-<buildVersion>` and publishes the release, without
-pushing a tag yourself.
+   | Runner | Builds |
+   |---|---|
+   | macOS | the universal `.dmg` |
+   | Windows | the x64 installer, `airdroid-setup-<version>-amd64.exe` |
+   | Ubuntu | the x64 `.deb` and `.tar.gz` |
 
-To ship builds that open without a Gatekeeper warning, set a Developer ID in
-`macos.signingIdentity` and notarize; see MyGo's
+   Each runs `go test`, `go vet` and `mygo vet`, stages adb, scrcpy and FFmpeg
+   with the three scripts, and builds with `-sign=- -skip-notarize`.
+4. A last job publishes a GitHub release of the tag with every package.
+
+*Run workflow* (Actions › Release) builds the packages as artifacts, without
+publishing them.
+
+To ship builds that open without a warning, set a Developer ID in
+`macos.signingIdentity` and notarize, and a certificate in
+`windows.certificate`; see MyGo's
 [distribution guide](https://github.com/egoist/mygo/blob/main/docs/distribution.md).

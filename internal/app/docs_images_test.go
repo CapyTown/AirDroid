@@ -22,6 +22,9 @@ func TestDocsImages(t *testing.T) {
 	if dir == "" {
 		t.Skip("AIRDROID_DOCS_IMAGES not set")
 	}
+	// The screenshots show the Mac app.
+	defer func(g string) { goos = g }(goos)
+	goos = "darwin"
 	save := func(name string, img *image.RGBA) {
 		f, err := os.Create(filepath.Join(dir, name+".png"))
 		if err != nil {

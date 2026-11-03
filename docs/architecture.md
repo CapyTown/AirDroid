@@ -1,13 +1,16 @@
 # Architecture
 
 AirDroid is a Go program of the [MyGo](https://github.com/egoist/mygo)
-framework, built with `CGO_ENABLED=0`:
+framework, built with `CGO_ENABLED=0` for macOS, Windows and Linux:
 
 - **No cgo, no Objective-C, no web view.** Its windows are MyGo's native UI
   (package `ui`), drawn on the GPU.
-- **System frameworks through purego.** The ones MyGo does not wrap (CoreMedia,
-  CoreVideo, VideoToolbox, Accelerate) are called through
+- **System frameworks through purego.** On macOS, the ones MyGo does not wrap
+  (CoreMedia, CoreVideo, VideoToolbox, Accelerate) are called through
   [purego](https://github.com/ebitengine/purego).
+- **FFmpeg as a program elsewhere.** Windows and Linux have no system decoder
+  that Go can call without cgo, so a bundled FFmpeg executable decodes the
+  video there (see [Video](#video)).
 
 It reaches phones with `adb`, and streams them with `scrcpy-server`, the
 program the [scrcpy](https://github.com/Genymobile/scrcpy) project runs on the
@@ -21,8 +24,10 @@ phone ── scrcpy-server ──adb tunnel──► internal/scrcpy (Go: demux,
                                         │ encoded H.264/H.265 access units
                          ┌──────────────┴──────────────┐
                          ▼                             ▼
-             internal/vt: VideoToolbox        recorder goroutine (internal/app)
-             (GPU decode + scale, purego)     internal/mp4: passthrough muxer
+   macOS: internal/vt, VideoToolbox   recorder goroutine (internal/app)
+   (GPU decode + scale, purego)       internal/mp4: passthrough muxer
+   Windows, Linux: internal/ffdec,
+   FFmpeg on a pipe
                          │ RGBA at window size         │ the same bytes
                          ▼                             ▼
                  ui.Bitmap in the window          ~/Downloads/*.mov|mp4
@@ -61,9 +66,9 @@ AirDroid does not run scrcpy's client; it is a client of its own
   prefixes when every start code is 4 bytes, as MediaCodec writes them.
   Parameter sets found inside a frame become a new configuration. The size
   comes from session headers, or from parsing the SPS (H.264 and H.265).
-- **Decoding** (`internal/vt`) is a VideoToolbox decompression session, called
-  through purego. Its output callback is one purego callback, made once and
-  routed by an id.
+- **Decoding on macOS** (`internal/vt`) is a VideoToolbox decompression
+  session, called through purego. Its output callback is one purego callback,
+  made once and routed by an id.
   - Pictures come out as BGRA on IOSurfaces.
   - A VTPixelTransferSession scales them on the GPU to the pixels the window
     shows them at, which the view measures as it draws.
@@ -71,6 +76,19 @@ AirDroid does not run scrcpy's client; it is a client of its own
     those pixels, at the window's size, cross to the CPU.
   - After a decoding error or a lost GPU session, decoding waits for a key
     frame and asks the device for one (`ResetVideo`).
+- **Decoding on Windows and Linux** (`internal/ffdec`) runs the bundled FFmpeg.
+  - Access units go to its standard input as Annex B: start codes, the
+    parameter sets before each key frame, and an access unit delimiter after
+    each frame, so that FFmpeg's parser knows the frame is whole.
+  - FFmpeg decodes with one thread and `low_delay`, scales to the window's
+    pixels and writes raw RGBA to its standard output, read straight into the
+    reused pictures. Frames come out at most one frame after they go in.
+    `-fflags nobuffer` is left out on purpose: on a pipe it holds back half
+    the frames of a raw H.264 stream.
+  - A new configuration, or a window that settled at another size, starts a
+    new FFmpeg at the next key frame, which AirDroid asks the device for.
+    When FFmpeg falls behind, frames are skipped to the next key frame rather
+    than queued.
 - **Showing.** A mailbox hands the newest picture to the window with
   `Window.Update`, which calls `ui.Bitmap.Update`. Pictures the window had no
   time to show are dropped, not queued, so the picture never lags behind the
@@ -134,22 +152,38 @@ phone encoded, the same bytes the decoder receives, as scrcpy's own
   connects. *Use Wi-Fi* runs `adb tcpip 5555` and connects to the phone's
   Wi-Fi address.
 - **Settings** are kept per device by its hardware serial, the same over USB
-  and Wi-Fi, in `~/Library/Application Support/AirDroid/config.json`.
+  and Wi-Fi, in `config.json` in the user's configuration directory:
+  `~/Library/Application Support/AirDroid` on macOS, `%AppData%\AirDroid` on
+  Windows, `~/.config/AirDroid` on Linux.
+
+## Platforms
+
+| | macOS | Windows | Linux |
+|---|---|---|---|
+| Video | VideoToolbox (GPU) | bundled FFmpeg | bundled FFmpeg |
+| Icon | menu bar, template | system tray | system tray (AppIndicator) |
+| Dock | leaves it when no window is open | — | — |
+| Shortcuts | ⌘ | Ctrl | Ctrl |
+| Helpers | `adb`, `scrcpy` | `adb.exe`, `scrcpy.exe`, `ffmpeg.exe`, run without a console | `adb`, `scrcpy`, `ffmpeg` |
+| Package | universal `.app` and `.dmg` | NSIS installer | `.deb`, and a `.tar.gz` with `install.sh` |
 
 ## Code
 
 | | |
 |---|---|
-| `main.go` | entry point, logging (`~/Library/Logs/AirDroid`) |
+| `main.go` | entry point, logging (`~/Library/Logs/AirDroid` on macOS, the app's data directory elsewhere) |
 | `internal/app` | the app: tray menu and menu bar, mirror window and sidebar, settings, Add Device, recorder, audio, keys |
 | `internal/scrcpy` | scrcpy-server client: launch, tunnels, stream framing, control and device messages |
 | `internal/adb` | adb: device tracking over the server socket, device info, Wi-Fi, pairing, screencap |
-| `internal/vt` | VideoToolbox decoding through purego (macOS; a stub elsewhere) |
+| `internal/video` | what the decoders share: pictures, their pool, their size |
+| `internal/vt` | VideoToolbox decoding through purego (macOS) |
+| `internal/ffdec` | FFmpeg decoding on a pipe (Windows, Linux) |
+| `internal/proc` | runs adb, scrcpy and FFmpeg without a console window on Windows |
 | `internal/media` | H.264/H.265: Annex B, parameter sets, SPS parsing, avcC/hvcC |
 | `internal/mp4` | MP4/QuickTime passthrough writer |
 | `internal/config` | settings, defaults and per-device options |
-| `resources/` | the app icon, and the bundled scrcpy and adb (fetched, not committed) |
-| `scripts/fetch-scrcpy.sh` | downloads the bundled scrcpy and adb |
+| `resources/` | the app icon, and per platform the bundled adb, scrcpy and FFmpeg (staged, not committed) |
+| `scripts/bundle-*.py` | stage adb, scrcpy and FFmpeg for a platform |
 | `mygo.json` | the app's name, identifier, version and Info.plist keys |
 
 ## Threads

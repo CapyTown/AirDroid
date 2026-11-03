@@ -20,6 +20,13 @@
     }
   },
   "linux": {
-    "webview": false
+    "webview": false,
+    "comment": "Mirror and control Android phones",
+    "categories": [
+      "Utility"
+    ],
+    "depends": [
+      "libayatana-appindicator3-1"
+    ]
   }
 }

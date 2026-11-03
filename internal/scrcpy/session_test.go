@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"regexp"
+	"runtime"
 	"strings"
 	"sync"
 	"testing"
@@ -192,6 +193,9 @@ func fakeADBClient(t *testing.T) (*adb.Client, string) {
 }
 
 func TestSessionEndToEnd(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("the fake adb is a shell script")
+	}
 	client, dir := fakeADBClient(t)
 	server := filepath.Join(dir, "scrcpy-server")
 	os.WriteFile(server, []byte("jar"), 0o644)

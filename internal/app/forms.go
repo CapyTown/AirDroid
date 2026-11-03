@@ -141,7 +141,7 @@ func mirrorOptionsForm(c *ui.Context, o *config.MirrorOptions, compact bool) boo
 		changed = segmentedRow(c, "codec", "Codec", sub("H.265 is sharper at a bit rate, where the phone encodes it."), &o.Codec, codecs, []string{"H.264", "H.265"}) || changed
 	})
 	section(c, func() {
-		changed = switchRow(c, "audio", "Device audio", sub("Play the phone's sound on the Mac (Android 11 and later)."), &o.Audio) || changed
+		changed = switchRow(c, "audio", "Device audio", sub("Play the phone's sound on this computer (Android 11 and later)."), &o.Audio) || changed
 		changed = switchRow(c, "screenOff", "Turn the phone's screen off", sub("Mirroring goes on with the phone's display dark."), &o.TurnScreenOff) || changed
 		changed = switchRow(c, "stayAwake", "Stay awake", sub("Keep the phone awake while it is plugged in."), &o.StayAwake) || changed
 		changed = switchRow(c, "touches", "Show touches", sub("Show where the phone is touched, on its screen."), &o.ShowTouches) || changed

@@ -2,7 +2,10 @@ package scrcpy
 
 import (
 	"bytes"
+	"context"
 	"encoding/hex"
+	"os"
+	"path/filepath"
 	"testing"
 )
 
@@ -92,5 +95,18 @@ func TestParseVersions(t *testing.T) {
 	}
 	if v := ServerVersionFromMismatch("[server] ERROR: The server version (3.3.4) does not match the client (5.0)"); v != "3.3.4" {
 		t.Errorf("mismatch: %q", v)
+	}
+}
+
+// The bundling scripts record the server's version in origin.json.
+func TestResolveServerVersionFromOrigin(t *testing.T) {
+	dir := t.TempDir()
+	os.WriteFile(filepath.Join(dir, "scrcpy-server"), []byte("jar"), 0o644)
+	os.WriteFile(filepath.Join(dir, "origin.json"), []byte(`{"version": "5.0.1", "architecture": "amd64"}`), 0o644)
+	for _, path := range []string{filepath.Join(dir, "scrcpy-server"), dir} {
+		s, err := ResolveServer(context.Background(), path)
+		if err != nil || s.Version != "5.0.1" || s.Path != filepath.Join(dir, "scrcpy-server") {
+			t.Errorf("%s: %+v %v", path, s, err)
+		}
 	}
 }

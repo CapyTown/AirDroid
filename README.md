@@ -3,30 +3,32 @@
 <h1 align="center">AirDroid</h1>
 
 <p align="center">
-  <b>Your Android phone, in your Mac's menu bar.</b><br>
-  Mirror it, control it, screenshot and record it, over USB or Wi-Fi.
+  <b>Your Android phone, on your desktop.</b><br>
+  Mirror it, control it, screenshot and record it, over USB or Wi-Fi, on macOS, Windows and Linux.
 </p>
 
 <p align="center">
   <a href="https://github.com/CapyTown/AirDroid/releases"><img alt="Download" src="https://img.shields.io/badge/download-GitHub%20Releases-6a4ff0"></a>
   <img alt="macOS 12 or later" src="https://img.shields.io/badge/macOS-12%2B-6a4ff0">
-  <img alt="Apple silicon and Intel" src="https://img.shields.io/badge/Apple%20silicon%20%26%20Intel-universal-6a4ff0">
+  <img alt="Windows 10 or later" src="https://img.shields.io/badge/Windows-10%2B-6a4ff0">
+  <img alt="Linux x64" src="https://img.shields.io/badge/Linux-x64-6a4ff0">
   <img alt="Android 5 or later" src="https://img.shields.io/badge/Android-5%2B-6a4ff0">
   <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/licence-MIT-6a4ff0"></a>
 </p>
 
 <p align="center"><a href="#features">Features</a> · <a href="#install">Install</a> · <a href="#keyboard-shortcuts">Shortcuts</a> · <a href="#privacy">Privacy</a> · <a href="#known-limits">Known limits</a> · <a href="docs/development.md">Build from source</a> · <a href="#licence">Licence</a></p>
 
-AirDroid lives in the menu bar. Plug in your Android phone, or pair it over
-Wi-Fi, and it opens in a window on your Mac. The window is as sharp and smooth
-as the phone itself, with its sound. Tap with the mouse, type with the
-keyboard, paste from the Mac, take screenshots and record the screen from a
-small sidebar beside it.
+AirDroid lives in the menu bar on a Mac, and in the system tray on Windows
+and Linux. Plug in your Android phone, or pair it over Wi-Fi, and it opens in
+a window on your computer. The window is as sharp and smooth as the phone
+itself, with its sound. Tap with the mouse, type with the keyboard, paste
+from the computer, take screenshots and record the screen from a small
+sidebar beside it.
 
-It is a native Mac app of a few megabytes, built in Go with
-[MyGo](https://github.com/egoist/mygo), with no browser engine inside. It
-needs nothing installed on the phone or the Mac: `adb` and
-[scrcpy](https://github.com/Genymobile/scrcpy) come inside the app.
+It is a native app built in Go with [MyGo](https://github.com/egoist/mygo),
+with no browser engine inside. It needs nothing installed on the phone or the
+computer: `adb`, [scrcpy](https://github.com/Genymobile/scrcpy) and, on
+Windows and Linux, FFmpeg come inside the app.
 
 ## Features
 
@@ -35,18 +37,19 @@ needs nothing installed on the phone or the Mac: `adb` and
 <p align="center"><img src="docs/images/mirror.png" alt="A phone mirrored in AirDroid's window, with the sidebar beside it" width="420"></p>
 
 - **The phone's screen in a window**, up to its full resolution and 120 frames
-  a second. The video is decoded on the Mac's GPU and scaled to the window, so
-  even a large window stays light. Resize it and the picture keeps its shape;
-  rotate the phone and the window turns with it.
+  a second. The video is decoded and scaled to the window before it is drawn,
+  on the GPU on a Mac, so even a large window stays light. Resize it and the
+  picture keeps its shape; rotate the phone and the window turns with it.
 - **Use it as you use the phone.** Click and drag to tap and swipe, and scroll
   with the trackpad or the wheel. Right-click goes back, middle-click goes
   home.
 - **Type with your keyboard,** in any language and with your input methods.
   Chinese, Japanese, emoji: what Android cannot type directly, AirDroid pastes
   for you.
-- **One clipboard.** ⌘V pastes what you copied on the Mac into the phone, and
-  what you copy on the phone is ready to paste on the Mac.
-- **The phone's sound plays on the Mac** (Android 11 and later).
+- **One clipboard.** ⌘V (Ctrl+V on Windows and Linux) pastes what you copied
+  on the computer into the phone, and what you copy on the phone is ready to
+  paste on the computer.
+- **The phone's sound plays on your computer** (Android 11 and later).
 
 ### A sidebar of shortcuts
 
@@ -76,7 +79,7 @@ shortcut:
 - **Never interrupts you.** Recording runs in the background, so mirroring and
   input never stutter. If the disk fills up, the recording stops and says why,
   and mirroring goes on.
-- **MOV with sound, or MP4,** playable in QuickTime, Photos, iMovie and
+- **MOV with sound, or MP4,** playable in QuickTime, VLC, video editors and
   everywhere else. Rotate the phone during a recording and AirDroid starts a
   new file, so each video keeps one shape.
 - **Safe on quit:** quitting while recording finishes the file first.
@@ -96,15 +99,15 @@ shortcut:
 - **Cut the cable:** *Use Wi-Fi* moves a phone plugged in over USB to Wi-Fi,
   so you can unplug it and carry on.
 
-### In the menu bar
+### In the menu bar or the system tray
 
 - **Every phone at a glance:** connected, waiting for permission or offline,
   over USB or Wi-Fi. Click one to mirror it.
 - **Phones you used over Wi-Fi** reconnect from the menu.
 - **While a recording runs,** the icon shows a red dot and the menu offers
   *Stop Recording*.
-- **AirDroid stays out of the Dock** until you open a window, and leaves it
-  when you close them (you can keep it there in Settings).
+- **On a Mac, AirDroid stays out of the Dock** until you open a window, and
+  leaves it when you close them (you can keep it there in Settings).
 
 ### Settings
 
@@ -113,7 +116,7 @@ shortcut:
 | <img src="docs/images/settings-general.png" alt="Settings, General"> | <img src="docs/images/settings-mirroring.png" alt="Settings, Mirroring"> |
 
 - **General:**
-  - Open at login, and the Dock icon.
+  - Open at login, and on a Mac, the Dock icon.
   - Where screenshots and recordings go: your Downloads folder, unless you
     choose another.
   - Whether screenshots are copied too.
@@ -123,23 +126,31 @@ shortcut:
   touches, and keep the window on top. Each phone can have its own, from its
   window's sidebar.
 - **Advanced:** AirDroid comes with `adb` and `scrcpy`, and can use yours
-  instead, such as Homebrew's or Android Studio's, showing the version of each.
+  instead, such as Homebrew's, your Linux distribution's or Android Studio's,
+  showing the version of each.
 
 ## Install
 
 **Requirements**
-- A Mac with macOS 12 or later, Apple silicon or Intel.
+- **macOS** 12 or later, Apple silicon or Intel.
+- **Windows** 10 or 11, x64.
+- **Linux** x64 with GTK 3 and, for the tray icon, `libayatana-appindicator3`
+  (Debian, Ubuntu, Fedora, Arch and others).
 - An Android phone with **USB debugging** on (Android 5 and later).
   - Sound needs Android 11 or later.
   - Pairing over Wi-Fi without a cable needs Android 11 or later.
 
-**Steps**
-1. Download the latest `.dmg` from
-   [Releases](https://github.com/CapyTown/AirDroid/releases). No release yet?
-   [Build it](docs/development.md): one command.
-2. Drag **AirDroid** to Applications and open it. Its icon appears in the menu
-   bar.
-3. Choose **Add Device…** and follow the steps for USB or Wi-Fi.
+**Download** the latest release from
+[Releases](https://github.com/CapyTown/AirDroid/releases):
+
+| | | |
+|---|---|---|
+| macOS | `airdroid-<version>.dmg` | Drag **AirDroid** to Applications and open it. Its icon appears in the menu bar. |
+| Windows | `airdroid-setup-<version>-amd64.exe` | Run the installer, then open AirDroid from the Start menu. Its icon appears in the system tray. |
+| Linux | `airdroid_<version>_amd64.deb`, or `airdroid-<version>-linux-amd64.tar.gz` | Install the package (`sudo apt install ./airdroid_*.deb`), or unpack the archive and run `sh install.sh`. Open AirDroid from your applications. |
+
+Then choose **Add Device…** from AirDroid's icon and follow the steps for USB
+or Wi-Fi.
 
 **On the phone:** open *Settings › About phone*, tap *Build number* seven
 times, then turn on *USB debugging* in *Developer options*. The first time you
@@ -147,22 +158,24 @@ connect, tap **Allow** on the phone.
 
 ## Keyboard shortcuts
 
-| | |
-|---|---|
-| ⌘S | Screenshot |
-| ⇧⌘R | Start or stop recording |
-| ⌘R | Rotate |
-| ⌘I | This phone's settings |
-| ⌘B · ⇧⌘H · ⇧⌘A | Back · Home · Recent apps |
-| ⇧⌘N | Pull down the notifications |
-| ⌘↑ · ⌘↓ · ⌘P | Volume up · Volume down · Power |
-| ⌘V | Paste the Mac's clipboard on the phone |
-| ⌘N · ⌘, | Add Device · Settings |
-| Right-click · Middle-click | Back · Home |
+On Windows and Linux, Ctrl takes the place of ⌘.
+
+| macOS | Windows and Linux | |
+|---|---|---|
+| ⌘S | Ctrl+S | Screenshot |
+| ⇧⌘R | Ctrl+Shift+R | Start or stop recording |
+| ⌘R | Ctrl+R | Rotate |
+| ⌘I | Ctrl+I | This phone's settings |
+| ⌘B · ⇧⌘H · ⇧⌘A | Ctrl+B · Ctrl+Shift+H · Ctrl+Shift+A | Back · Home · Recent apps |
+| ⇧⌘N | Ctrl+Shift+N | Pull down the notifications |
+| ⌘↑ · ⌘↓ · ⌘P | Ctrl+↑ · Ctrl+↓ · Ctrl+P | Volume up · Volume down · Power |
+| ⌘V | Ctrl+V | Paste the computer's clipboard on the phone |
+| ⌘N · ⌘, | Ctrl+N · Ctrl+, | Add Device · Settings |
+| Right-click · Middle-click | Right-click · Middle-click | Back · Home |
 
 ## Privacy
 
-- **Everything stays between your Mac and your phone.** The picture, the sound
+- **Everything stays between your computer and your phone.** The picture, the sound
   and your typing go over the USB cable or your own Wi-Fi network, and nowhere
   else.
 - **No account, no analytics, no cloud.** AirDroid sends nothing about you
@@ -173,8 +186,8 @@ connect, tap **Allow** on the phone.
   settings such as *show touches* and *stay awake* go back when you close the
   window.
 - Screenshots and recordings are saved where you choose, and nowhere else.
-- macOS asks once for **Local Network** access, which Wi-Fi pairing and
-  connecting need.
+- On a Mac, macOS asks once for **Local Network** access, which Wi-Fi pairing
+  and connecting need.
 
 ## Known limits
 
@@ -182,19 +195,27 @@ connect, tap **Allow** on the phone.
   set in Settings › General.
 - **Sound** comes from Android 11 and later; on older phones, AirDroid mirrors
   the picture alone.
-- **Codecs:** H.264 and H.265, decoded by the Mac's hardware. Choose H.264 for
-  older phones whose H.265 encoder is unreliable.
+- **Codecs:** H.264 and H.265, decoded by the Mac's hardware, and by the
+  bundled FFmpeg on Windows and Linux. Choose H.264 for older phones whose
+  H.265 encoder is unreliable, or for a smoother picture on a slower PC.
+- **Windows:** some phones need their maker's USB driver (or Google's) before
+  `adb` sees them over USB; Wi-Fi needs none.
+- **Linux:** to use a phone over USB without root, your user needs access to
+  the device (the `android-udev-rules` package, or your distribution's
+  equivalent).
 - **One finger:** the mouse is a single touch; pinch gestures are not sent yet.
   *Open in scrcpy Window* (in the Device menu) opens the phone in scrcpy's own
   window for what AirDroid's does not do.
-- **Builds you make yourself** are signed ad hoc: macOS asks you to confirm
-  the first time you open them (right-click › Open).
+- **Releases are not code-signed yet:** macOS asks you to confirm the first
+  time you open AirDroid (right-click › Open), and Windows SmartScreen may ask
+  too (*More info › Run anyway*).
 
 ## Credits
 
 - Screen mirroring by [scrcpy](https://github.com/Genymobile/scrcpy) (Apache
   2.0), whose server AirDroid drives, and adb from Android's platform tools
-  (Apache 2.0). [escrcpy](https://github.com/viarotel-org/escrcpy) was the
+  (Apache 2.0). On Windows and Linux, video is decoded by
+  [FFmpeg](https://ffmpeg.org) (GPL), run as a separate program. [escrcpy](https://github.com/viarotel-org/escrcpy) was the
   reference for how to work with scrcpy.
 - Built with [MyGo](https://github.com/egoist/mygo) (MIT) and
   [purego](https://github.com/ebitengine/purego) (Apache 2.0).
@@ -205,5 +226,6 @@ how to build it and how to help: [docs/](docs/README.md).
 
 ## Licence
 
-AirDroid is released under the [MIT License](LICENSE). The scrcpy, scrcpy-server
-and adb it bundles keep their own licence, the Apache License 2.0.
+AirDroid is released under the [MIT License](LICENSE). The programs it bundles
+keep their own licences: scrcpy, scrcpy-server and adb the Apache License 2.0,
+and FFmpeg the GPL; see [third-party notices](docs/third-party-notices.md).

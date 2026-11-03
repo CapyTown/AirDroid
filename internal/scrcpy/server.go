@@ -2,13 +2,15 @@ package scrcpy
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/CapyTown/AirDroid/internal/proc"
 )
 
 // Server is a scrcpy-server file and the version it was built as, which
@@ -49,12 +51,20 @@ func ResolveServer(ctx context.Context, path string) (Server, error) {
 	}
 	var s Server
 	if st.IsDir() {
-		path = filepath.Join(path, "scrcpy")
+		dir := path
+		path = filepath.Join(dir, "scrcpy")
+		for _, name := range []string{"scrcpy-server", "scrcpy.exe"} {
+			if fileExists(filepath.Join(dir, name)) {
+				path = filepath.Join(dir, name)
+				break
+			}
+		}
 	}
 	if isServerFile(path) {
 		s.Path = path
 		for _, bin := range []string{
 			filepath.Join(filepath.Dir(path), "scrcpy"),
+			filepath.Join(filepath.Dir(path), "scrcpy.exe"),
 			filepath.Join(filepath.Dir(path), "bin", "scrcpy"),
 		} {
 			if fileExists(bin) {
@@ -83,7 +93,7 @@ func ResolveServer(ctx context.Context, path string) (Server, error) {
 	if s.Version == "" && s.Binary != "" {
 		ctx, cancel := context.WithTimeout(ctx, 10*time.Second)
 		defer cancel()
-		out, _ := exec.CommandContext(ctx, s.Binary, "--version").CombinedOutput()
+		out, _ := proc.Command(ctx, s.Binary, "--version").CombinedOutput()
 		s.Version = ParseScrcpyVersion(string(out))
 	}
 	return s, nil
@@ -108,13 +118,23 @@ func serverCandidates(bin string) []string {
 	)
 }
 
-// readVersionFile reads <server>.version.
+// readVersionFile reads the server's version from <server>.version, or from
+// origin.json beside it, which the bundling scripts write.
 func readVersionFile(server string) string {
-	data, err := os.ReadFile(server + ".version")
+	if data, err := os.ReadFile(server + ".version"); err == nil {
+		return strings.TrimPrefix(strings.TrimSpace(string(data)), "v")
+	}
+	data, err := os.ReadFile(filepath.Join(filepath.Dir(server), "origin.json"))
 	if err != nil {
 		return ""
 	}
-	return strings.TrimPrefix(strings.TrimSpace(string(data)), "v")
+	var origin struct {
+		Version string `json:"version"`
+	}
+	if json.Unmarshal(data, &origin) != nil {
+		return ""
+	}
+	return strings.TrimPrefix(origin.Version, "v")
 }
 
 func fileExists(p string) bool {

@@ -22,7 +22,7 @@ import (
 	"github.com/CapyTown/AirDroid/internal/media"
 	"github.com/CapyTown/AirDroid/internal/mp4"
 	"github.com/CapyTown/AirDroid/internal/scrcpy"
-	"github.com/CapyTown/AirDroid/internal/vt"
+	"github.com/CapyTown/AirDroid/internal/video"
 )
 
 type mirrorState int
@@ -74,10 +74,11 @@ type mirror struct {
 	lastClip      string
 	clipSeq       uint64
 	closed        bool
+	decErr        string // why there is no decoder
 
 	// Shared with the stream's goroutines.
 	decMu  sync.Mutex // the decoder, used by one session's reader at a time
-	dec    *vt.Decoder
+	dec    video.Decoder
 	curGen atomic.Int64 // the generation whose frames count
 	rec    *recorder
 	pcm    *pcmStream
@@ -114,13 +115,15 @@ func newMirror(a *App, d *Device) *mirror {
 		mygo.RunOnMain(func() { m.send(scrcpy.ResetVideo()) })
 	})
 	m.frames.m = m
-	dec, err := vt.NewDecoder(m.frames.put, func() {
+	dec, err := newDecoder(a, m.frames.put, func() {
 		mygo.RunOnMain(func() { m.send(scrcpy.ResetVideo()) })
 	})
 	if err != nil {
 		slog.Error("decoder", "err", err)
+		m.decErr = err.Error()
+	} else {
+		m.dec = dec
 	}
-	m.dec = dec
 
 	m.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:         m.title,
@@ -160,6 +163,10 @@ func (m *mirror) setInfo(info adb.Info) {
 
 // connect starts a session with the current options.
 func (m *mirror) connect() {
+	if m.decErr != "" {
+		m.state, m.stateMsg = stateDisconnected, m.decErr
+		return
+	}
 	if m.session != nil {
 		m.session.Close()
 		m.session = nil
@@ -532,7 +539,7 @@ func (m *mirror) screenshot() {
 			if cfg.CopyScreenshot {
 				text = "Screenshot saved and copied"
 			}
-			m.pendingToasts = append(m.pendingToasts, toast{text: text, action: "Show in Finder", fn: func() { mygo.Shell.ShowItemInFolder(path) }})
+			m.pendingToasts = append(m.pendingToasts, toast{text: text, action: revealLabel(), fn: func() { mygo.Shell.ShowItemInFolder(path) }})
 		})
 	}()
 }
@@ -569,7 +576,7 @@ func (m *mirror) recorderReport(r recReport) {
 		switch {
 		case r.err != nil && len(r.paths) > 0:
 			path := r.paths[0]
-			m.pendingToasts = append(m.pendingToasts, toast{text: r.err.Error(), action: "Show in Finder", fn: func() { mygo.Shell.ShowItemInFolder(path) }})
+			m.pendingToasts = append(m.pendingToasts, toast{text: r.err.Error(), action: revealLabel(), fn: func() { mygo.Shell.ShowItemInFolder(path) }})
 		case r.err != nil:
 			m.pendingToasts = append(m.pendingToasts, toast{text: "Recording failed: " + r.err.Error()})
 		case len(r.paths) > 0:
@@ -578,7 +585,7 @@ func (m *mirror) recorderReport(r recReport) {
 			if len(r.paths) > 1 {
 				text = fmt.Sprintf("Recording saved in %d files", len(r.paths))
 			}
-			m.pendingToasts = append(m.pendingToasts, toast{text: text, action: "Show in Finder", fn: func() { mygo.Shell.ShowItemInFolder(path) }})
+			m.pendingToasts = append(m.pendingToasts, toast{text: text, action: revealLabel(), fn: func() { mygo.Shell.ShowItemInFolder(path) }})
 		}
 	}
 	m.app.refreshMenu()
@@ -783,7 +790,7 @@ func (m *mirror) typeText(text string) {
 	m.send(scrcpy.SetClipboard(m.clipSeq, text, true))
 }
 
-// paste pastes the Mac's clipboard on the device.
+// paste pastes the computer's clipboard on the device.
 func (m *mirror) paste() {
 	text := mygo.Clipboard.ReadText()
 	if text == "" {

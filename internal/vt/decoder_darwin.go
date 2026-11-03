@@ -1,5 +1,11 @@
 //go:build darwin
 
+// Package vt decodes H.264 and H.265 with the system's hardware decoder,
+// VideoToolbox, called from Go through purego: no cgo.
+//
+// Frames decode on the GPU, are scaled there to the size they show at, and
+// come out as RGBA pictures for a ui.Bitmap. Only that picture, at the
+// window's size rather than the device's, crosses to the CPU.
 package vt
 
 import (
@@ -13,6 +19,7 @@ import (
 	"github.com/ebitengine/purego"
 
 	"github.com/CapyTown/AirDroid/internal/media"
+	"github.com/CapyTown/AirDroid/internal/video"
 )
 
 // Native types are pointers (CFTypeRef) or integers, passed as uintptr.
@@ -158,9 +165,9 @@ type callbackRecord struct {
 // the stream's, except SetTargetSize.
 type Decoder struct {
 	id       uintptr
-	out      Output
+	out      video.Output
 	needKey  func()
-	pool     Pool
+	pool     video.Pool
 	record   *callbackRecord
 	format   cfRef
 	codec    media.Codec
@@ -181,7 +188,7 @@ type Decoder struct {
 
 // NewDecoder makes a decoder that gives its pictures to out and calls
 // needKey when it needs a key frame to go on, as after an error.
-func NewDecoder(out Output, needKey func()) (*Decoder, error) {
+func NewDecoder(out video.Output, needKey func()) (*Decoder, error) {
 	if err := load(); err != nil {
 		return nil, err
 	}
@@ -365,7 +372,7 @@ func (d *Decoder) deliver(img cfRef) error {
 	d.width.Store(int64(srcW))
 	d.height.Store(int64(srcH))
 	t := d.target.Load()
-	w, h := FitSize(srcW, srcH, int(t>>32), int(uint32(t)))
+	w, h := video.FitSize(srcW, srcH, int(t>>32), int(uint32(t)))
 	src := img
 	if w != srcW || h != srcH {
 		if d.transfer == 0 {

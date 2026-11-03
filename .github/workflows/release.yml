@@ -5,11 +5,6 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
-    inputs:
-      publish:
-        description: Publish a GitHub release, tagging this commit v<version>-<buildVersion> from mygo.json
-        type: boolean
-        default: false
 
 permissions:
   contents: read
@@ -30,10 +25,23 @@ jobs:
           - name: macOS universal DMG
             os: macos-latest
             platform: darwin/universal
+            adb: darwin
             artifact: macos
             path: build/darwin-universal/*.dmg
-    outputs:
-      tag: ${{ steps.version.outputs.tag }}
+          - name: Windows x64 installer
+            os: windows-latest
+            platform: windows/amd64
+            adb: windows
+            artifact: windows
+            path: build/windows-amd64/*-setup-*.exe
+          - name: Linux x64 packages
+            os: ubuntu-latest
+            platform: linux/amd64
+            adb: linux
+            artifact: linux
+            path: |
+              build/linux-amd64/*.deb
+              build/linux-amd64/*.tar.gz
     defaults:
       run:
         shell: bash
@@ -46,7 +54,7 @@ jobs:
         with:
           python-version: '3.13'
       - name: Check release version
-        id: version
+        if: github.event_name == 'push'
         run: |
           python - <<'PY'
           import json
@@ -59,22 +67,22 @@ jobs:
           if type(build) is not int or build < 0:
               raise SystemExit("mygo.json buildVersion must be a nonnegative integer")
           expected = f"v{version}-{build}"
-          if os.environ["GITHUB_EVENT_NAME"] == "push":
-              tag = os.environ["GITHUB_REF_NAME"]
-              if tag != expected:
-                  raise SystemExit(f"Tag {tag} must match mygo.json release {expected}")
-          with open(os.environ["GITHUB_OUTPUT"], "a", encoding="utf-8") as out:
-              out.write(f"tag={expected}\n")
+          tag = os.environ["GITHUB_REF_NAME"]
+          if tag != expected:
+              raise SystemExit(f"Tag {tag} must match mygo.json release {expected}")
           PY
       - name: Validate
         run: |
           go test ./...
           go vet ./...
           go tool mygo vet
-      # adb, scrcpy and scrcpy-server from scrcpy's official macOS release,
-      # checked against their SHA-256.
-      - name: Bundle ADB and scrcpy
-        run: ./scripts/fetch-scrcpy.sh
+      - name: Bundle ADB
+        run: python scripts/bundle-adb.py "${{ matrix.adb }}"
+      - name: Bundle scrcpy
+        run: python scripts/bundle-scrcpy.py "${{ matrix.adb }}"
+      - name: Bundle FFmpeg
+        run: python scripts/bundle-ffmpeg.py "${{ matrix.adb }}"
+      # MyGo downloads NSIS automatically on Windows when it is not installed.
       # Publishing belongs to the release job; these builds need no signing secrets.
       - name: Build installer
         run: go tool mygo build -platform "${{ matrix.platform }}" -sign=- -skip-notarize
@@ -86,7 +94,7 @@ jobs:
 
   release:
     name: Publish GitHub release
-    if: (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')) || (github.event_name == 'workflow_dispatch' && inputs.publish)
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
     needs: build
     permissions:
       contents: write
@@ -100,24 +108,9 @@ jobs:
       - name: Publish
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ needs.build.outputs.tag }}
         run: |
-          if [ "$GITHUB_EVENT_NAME" = push ]; then
-            # The pushed tag.
-            gh release create "$TAG" artifacts/* \
-              --repo "$GITHUB_REPOSITORY" \
-              --verify-tag \
-              --title "$TAG" \
-              --notes ''
-          else
-            # Run by hand: tag the commit the build ran on.
-            if gh release view "$TAG" --repo "$GITHUB_REPOSITORY" > /dev/null 2>&1; then
-              echo "Release $TAG already exists: bump buildVersion in mygo.json" >&2
-              exit 1
-            fi
-            gh release create "$TAG" artifacts/* \
-              --repo "$GITHUB_REPOSITORY" \
-              --target "$GITHUB_SHA" \
-              --title "$TAG" \
-              --notes ''
-          fi
+          gh release create "$GITHUB_REF_NAME" artifacts/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --notes ''

@@ -1,21 +1,27 @@
-// Package vt decodes H.264 and H.265 with the system's hardware decoder,
-// VideoToolbox, called from Go through purego: no cgo.
-//
-// Frames decode on the GPU, are scaled there to the size they show at, and
-// come out as RGBA pictures for a ui.Bitmap. Only that picture, at the
-// window's size rather than the device's, crosses to the CPU.
-package vt
+// Package video is what the decoders share: the pictures they make, for a
+// ui.Bitmap, and how big to make them.
+package video
 
 import (
-	"errors"
 	"image"
 	"sync"
 
 	"github.com/CapyTown/AirDroid/internal/media"
 )
 
-// ErrUnsupported is returned where VideoToolbox does not exist.
-var ErrUnsupported = errors.New("vt: hardware decoding needs macOS")
+// Decoder decodes one stream of length-prefixed H.264 or H.265 access
+// units into pictures. Its methods are called from the stream's goroutine,
+// except SetTargetSize, which may be called from any.
+type Decoder interface {
+	// SetTargetSize sets the box, in pixels, that pictures are scaled to
+	// fit; 0×0 keeps the stream's size.
+	SetTargetSize(w, h int)
+	// SetFormat starts decoding frames of new parameter sets.
+	SetFormat(p *media.ParameterSets) error
+	// Decode decodes an access unit.
+	Decode(data []byte, key bool) error
+	Close()
+}
 
 // Output receives decoded pictures. The picture belongs to the decoder
 // again once Release is called for it.
@@ -66,9 +72,4 @@ func FitSize(srcW, srcH, boxW, boxH int) (int, int) {
 	}
 	w, h = max(w&^1, 2), max(h&^1, 2)
 	return w, h
-}
-
-// Config is what a decoder is created with.
-type Config struct {
-	Params *media.ParameterSets
 }

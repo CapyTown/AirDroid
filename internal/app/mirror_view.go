@@ -133,10 +133,10 @@ func overlay(c *ui.Context, fn func()) ui.Element {
 func (m *mirror) sidebarView(c *ui.Context, vh float32) {
 	ui.Column(c).Width(sidebarWidth).Height(vh).Justify(ui.SpaceBetween).AlignItems(ui.Center).Children(func() {
 		pill(c, func() {
-			m.sideButton(c, "screenshot", "Screenshot", "Take a screenshot  ⌘S", iconCamera, false, m.shotBusy, m.state != stateStreaming, m.screenshot)
-			recLabel, recTip, recIcon := "Record", "Start recording  ⇧⌘R", iconRecord
+			m.sideButton(c, "screenshot", "Screenshot", "Take a screenshot  "+keys("S"), iconCamera, false, m.shotBusy, m.state != stateStreaming, m.screenshot)
+			recLabel, recTip, recIcon := "Record", "Start recording  "+keys("Shift+R"), iconRecord
 			if m.recording {
-				recLabel, recTip, recIcon = "Stop recording", "Stop recording  ⇧⌘R", iconStop
+				recLabel, recTip, recIcon = "Stop recording", "Stop recording  "+keys("Shift+R"), iconStop
 			}
 			m.sideButton(c, "record", recLabel, recTip, recIcon, m.recording, m.recBusy, m.state != stateStreaming && !m.recording, m.toggleRecording)
 			if m.recording {
@@ -145,17 +145,17 @@ func (m *mirror) sidebarView(c *ui.Context, vh float32) {
 					Label("Recording for " + d.Truncate(time.Second).String()).MarginY(-4)
 				c.After(time.Second - d%time.Second)
 			}
-			m.sideButton(c, "rotate", "Rotate", "Rotate the device  ⌘R", iconRotate, false, false, m.state != stateStreaming, m.rotate)
-			gear := m.sideButton(c, "settings", "Settings", "Mirroring settings  ⌘I", iconSettings, m.settingsOpen, false, false, func() {
+			m.sideButton(c, "rotate", "Rotate", "Rotate the device  "+keys("R"), iconRotate, false, false, m.state != stateStreaming, m.rotate)
+			gear := m.sideButton(c, "settings", "Settings", "Mirroring settings  "+keys("I"), iconSettings, m.settingsOpen, false, false, func() {
 				m.settingsOpen = !m.settingsOpen
 				m.editOpts = m.opts
 			})
 			m.settingsPopover(c, gear)
 		})
 		pill(c, func() {
-			m.sideButton(c, "recents", "Recent apps", "Recent apps  ⇧⌘A", iconRecents, false, false, m.state != stateStreaming, m.recents)
-			m.sideButton(c, "home", "Home", "Home  ⇧⌘H", iconHome, false, false, m.state != stateStreaming, m.home)
-			m.sideButton(c, "back", "Back", "Back  ⌘B", iconBack, false, false, m.state != stateStreaming, m.back)
+			m.sideButton(c, "recents", "Recent apps", "Recent apps  "+keys("Shift+A"), iconRecents, false, false, m.state != stateStreaming, m.recents)
+			m.sideButton(c, "home", "Home", "Home  "+keys("Shift+H"), iconHome, false, false, m.state != stateStreaming, m.home)
+			m.sideButton(c, "back", "Back", "Back  "+keys("B"), iconBack, false, false, m.state != stateStreaming, m.back)
 		})
 	})
 }

@@ -136,7 +136,7 @@ func (s *settingsWindow) view(c *ui.Context) {
 func (s *settingsWindow) general(c *ui.Context) {
 	t := c.Theme()
 	section(c, func() {
-		if switchRow(c, "login", "Open at login", "Starts in the menu bar, without opening a window.", &s.openAtLogin) {
+		if switchRow(c, "login", "Open at login", "Starts in the background, without opening a window.", &s.openAtLogin) {
 			on := s.openAtLogin
 			go func() {
 				err := mygo.App.SetOpenAtLogin(on)
@@ -149,12 +149,12 @@ func (s *settingsWindow) general(c *ui.Context) {
 			}()
 		}
 		hide := s.cfg.HideDockIconWhenClosed
-		if switchRow(c, "dock", "Hide Dock icon when closed", "With AirDroid in the menu bar, closing its windows takes it out of the Dock.", &hide) {
+		if hasDock() && switchRow(c, "dock", "Hide Dock icon when closed", "With AirDroid in the menu bar, closing its windows takes it out of the Dock.", &hide) {
 			s.save(func(c *config.Config) { c.HideDockIconWhenClosed = hide })
 			s.app.windowsChanged()
 		}
 	})
-	sectionNote(c, "⌘S screenshot · ⇧⌘R record · ⌘R rotate · ⌘B back · ⇧⌘H home · right-click goes back")
+	sectionNote(c, keys("S")+" screenshot · "+keys("Shift+R")+" record · "+keys("R")+" rotate · "+keys("B")+" back · "+keys("Shift+H")+" home · right-click goes back")
 
 	section(c, func() {
 		formRow(c, "Save screenshots to", displayPath(s.cfg.ScreenshotDir), func() {
@@ -278,7 +278,7 @@ func (s *settingsWindow) advanced(c *ui.Context) {
 			}
 		})
 		formRow(c, "Settings file", displayPath(config.DefaultPath()), func() {
-			if ui.Button(c.Key("revealConfig"), "Show in Finder").Clicked() {
+			if ui.Button(c.Key("revealConfig"), revealLabel()).Clicked() {
 				mygo.Shell.ShowItemInFolder(config.DefaultPath())
 			}
 		})
