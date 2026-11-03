@@ -44,7 +44,7 @@ func (d *Device) WiFi() bool { return adb.IsWiFiSerial(d.Serial) }
 // Name is what people call the device.
 func (d *Device) Name() string {
 	if d.HasInfo {
-		return d.Info.NameIn(mygo.App.Locale())
+		return d.Info.NameIn(i18n.Locale())
 	}
 	if d.Model != "" {
 		return strings.ReplaceAll(d.Model, "_", " ")

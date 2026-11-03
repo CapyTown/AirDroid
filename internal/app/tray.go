@@ -2,6 +2,7 @@ package app
 
 import (
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/i18n"
 
 	"github.com/CapyTown/AirDroid/locales"
 )
@@ -43,7 +44,7 @@ func (a *App) refreshMenu() {
 				Label:   label,
 				Type:    mygo.MenuItemCheckbox,
 				Checked: mirroring,
-				ToolTip: d.Info.SubtitleIn(mygo.App.Locale()),
+				ToolTip: d.Info.SubtitleIn(i18n.Locale()),
 				Click: func(it *mygo.MenuItem, _ *mygo.Window) {
 					it.SetChecked(true)
 					a.openMirror(dev.Serial)

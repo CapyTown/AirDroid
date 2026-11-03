@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/egoist/mygo"
+	"github.com/egoist/mygo/i18n"
 	"github.com/egoist/mygo/audio"
 	"github.com/egoist/mygo/ui"
 
@@ -154,7 +155,7 @@ func (m *mirror) setInfo(info adb.Info) {
 		return
 	}
 	m.info = info
-	m.title = info.NameIn(mygo.App.Locale())
+	m.title = info.NameIn(i18n.Locale())
 	m.subtitle = deviceSubtitle(info, m.serial)
 	if m.identity == "" {
 		m.identity = info.Identity()
