@@ -150,7 +150,7 @@ func (m *mirror) sidebarView(c *ui.Context, vh float32) {
 			if m.recording {
 				d := time.Since(m.recStart)
 				ui.Text(c, clock(d)).FontSize(12).Bold().TextColor(recordGreen).FontFeatures("tnum").
-					Label(locales.RecordingFor(d.Truncate(time.Second).String())).MarginY(-4)
+					Label(locales.RecordingFor(d.Truncate(time.Second).String())).Margin(-13, 0, -4, 0)
 				c.After(time.Second - d%time.Second)
 			}
 			screenTip := locales.ScreenOffTip()
