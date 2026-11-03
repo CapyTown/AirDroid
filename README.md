@@ -43,7 +43,7 @@ used.
 - **Audio.** The phone's sound plays on the Mac (Android 11 and later).
 - **Settings** (⌘,) in three tabs:
   - **General:** open at login, the Dock icon, where screenshots and
-    recordings go, and the recording format.
+    recordings go (~/Downloads unless changed), and the recording format.
   - **Mirroring:** defaults for resolution, bit rate, frame rate, codec,
     audio, screen off, stay awake, show touches, and keep on top.
   - **Advanced:** bundled or custom `adb` and `scrcpy` paths, with their
@@ -60,7 +60,7 @@ phone ── scrcpy-server ──adb tunnel──► internal/scrcpy (Go: demux,
              (GPU decode + scale, purego)     internal/mp4: passthrough muxer
                          │ RGBA at window size         │ same bytes → .mov/.mp4
                          ▼                             ▼
-                 ui.Bitmap in the window          ~/Movies/MyGo
+                 ui.Bitmap in the window          ~/Downloads
 ```
 
 - **Native client of scrcpy-server.** MyGo pushes the bundled

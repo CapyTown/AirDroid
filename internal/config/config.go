@@ -113,9 +113,9 @@ func Default() Config {
 	home, _ := os.UserHomeDir()
 	return Config{
 		HideDockIconWhenClosed: true,
-		ScreenshotDir:          filepath.Join(home, "Pictures", "MyGo"),
+		ScreenshotDir:          filepath.Join(home, "Downloads"),
 		CopyScreenshot:         true,
-		RecordingDir:           filepath.Join(home, "Movies", "MyGo"),
+		RecordingDir:           filepath.Join(home, "Downloads"),
 		RecordingFormat:        FormatMP4,
 		RecordAudio:            true,
 		Mirror:                 DefaultMirrorOptions(),

@@ -60,3 +60,16 @@ func TestRequiresRestart(t *testing.T) {
 		t.Error("the bit rate needs a new stream")
 	}
 }
+
+func TestDefaultsSaveToDownloads(t *testing.T) {
+	c := Default()
+	if filepath.Base(c.ScreenshotDir) != "Downloads" || filepath.Base(c.RecordingDir) != "Downloads" {
+		t.Errorf("screenshots %q, recordings %q", c.ScreenshotDir, c.RecordingDir)
+	}
+	// An emptied folder falls back to Downloads too.
+	s, _ := Open(filepath.Join(t.TempDir(), "c.json"))
+	s.Update(func(c *Config) { c.ScreenshotDir, c.RecordingDir = "", "" })
+	if got := s.Get(); got.ScreenshotDir != c.ScreenshotDir || got.RecordingDir != c.RecordingDir {
+		t.Errorf("empty folders: %q %q", got.ScreenshotDir, got.RecordingDir)
+	}
+}
