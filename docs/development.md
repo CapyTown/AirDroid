@@ -97,8 +97,10 @@ tag is pushed:
      (`-sign=- -skip-notarize`).
 4. A last job publishes a GitHub release of the tag with the `.dmg`.
 
-The workflow can also run by hand (*Run workflow*), which builds the `.dmg`
-as an artifact without publishing it.
+The workflow can also run by hand (*Actions › Release › Run workflow*). It
+builds the `.dmg` as an artifact; with *Publish* checked, it also tags the
+commit `v<version>-<buildVersion>` and publishes the release, without
+pushing a tag yourself.
 
 To ship builds that open without a Gatekeeper warning, set a Developer ID in
 `macos.signingIdentity` and notarize; see MyGo's
