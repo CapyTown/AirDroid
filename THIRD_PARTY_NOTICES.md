@@ -2,14 +2,14 @@
 
 ## scrcpy
 
-MyGo bundles scrcpy, scrcpy-server and adb from scrcpy's official macOS
+AirDroid bundles scrcpy, scrcpy-server and adb from scrcpy's official macOS
 releases (https://github.com/Genymobile/scrcpy), downloaded by
 `scripts/fetch-scrcpy.sh`. scrcpy is Copyright (C) 2018 Genymobile and
 Copyright (C) 2018-2026 Romain Vimont, licensed under the Apache License 2.0;
 its license ships in the app as `scrcpy-LICENSE.txt`. adb is part of the
 Android SDK Platform-Tools, licensed under the Apache License 2.0.
 
-MyGo implements a client of scrcpy-server's protocol; it does not contain
+AirDroid implements a client of scrcpy-server's protocol; it does not contain
 scrcpy's client code.
 
 ## Lucide

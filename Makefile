@@ -1,4 +1,4 @@
-# MyGo: Go alone, no cgo. Building needs Go 1.27 and network access once,
+# AirDroid: Go alone, no cgo. Building needs Go 1.27 and network access once,
 # for scrcpy's release (scripts/fetch-scrcpy.sh).
 
 GO ?= go
@@ -15,7 +15,7 @@ deps: resources/darwin/scrcpy-server
 dev: deps
 	$(GO) tool mygo dev
 
-# MyGo.app and its disk image, for Apple silicon and Intel, in build/.
+# AirDroid.app and its disk image, for Apple silicon and Intel, in build/.
 build: deps
 	$(GO) tool mygo build -platform darwin/universal
 

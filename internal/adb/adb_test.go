@@ -80,14 +80,14 @@ func TestParseRouteAndMDNS(t *testing.T) {
 		t.Errorf("ip %q", ip)
 	}
 	svcs := ParseMDNSServices(`List of discovered mdns services
-mygo-abc	_adb-tls-pairing._tcp	192.168.1.42:37099
+airdroid-abc	_adb-tls-pairing._tcp	192.168.1.42:37099
 adb-R5CT-xyz	_adb-tls-connect._tcp	192.168.1.42:41234
 `)
-	if len(svcs) != 2 || !svcs[0].Pairing() || svcs[1].Pairing() || svcs[1].Address != "192.168.1.42:41234" || svcs[0].Name != "mygo-abc" {
+	if len(svcs) != 2 || !svcs[0].Pairing() || svcs[1].Pairing() || svcs[1].Address != "192.168.1.42:41234" || svcs[0].Name != "airdroid-abc" {
 		t.Errorf("services %+v", svcs)
 	}
-	q := QRPairing{Name: "mygo-abc", Password: "secret"}
-	if q.Payload() != "WIFI:T:ADB;S:mygo-abc;P:secret;;" {
+	q := QRPairing{Name: "airdroid-abc", Password: "secret"}
+	if q.Payload() != "WIFI:T:ADB;S:airdroid-abc;P:secret;;" {
 		t.Errorf("payload %q", q.Payload())
 	}
 }

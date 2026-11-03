@@ -1,5 +1,5 @@
 #!/bin/sh
-# Downloads scrcpy's official macOS releases and puts what MyGo ships into
+# Downloads scrcpy's official macOS releases and puts what AirDroid ships into
 # resources/, where `mygo build` bundles it into the app:
 #
 #   resources/darwin-arm64/bin/scrcpy         Apple silicon

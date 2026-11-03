@@ -1,4 +1,4 @@
-// MyGo mirrors and controls Android devices from the macOS menu bar.
+// AirDroid mirrors and controls Android devices from the macOS menu bar.
 //
 // It is written in Go alone with the MyGo framework: its windows are
 // MyGo's native UI, drawn on the GPU, and it reaches the system through
@@ -33,7 +33,7 @@ func main() {
 	}
 }
 
-// setupLogging writes the log to ~/Library/Logs/MyGo/mygo.log, and to the
+// setupLogging writes the log to ~/Library/Logs/AirDroid/airdroid.log, and to the
 // terminal during development.
 func setupLogging() {
 	level := slog.LevelInfo
@@ -42,7 +42,7 @@ func setupLogging() {
 	}
 	var out io.Writer = os.Stderr
 	if dir, err := mygo.App.Path(mygo.PathLogs); err == nil {
-		path := filepath.Join(dir, "mygo.log")
+		path := filepath.Join(dir, "airdroid.log")
 		if st, err := os.Stat(path); err == nil && st.Size() > 8<<20 {
 			_ = os.Rename(path, path+".1")
 		}

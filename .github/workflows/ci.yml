@@ -24,11 +24,11 @@ jobs:
       - uses: actions/setup-go@v5
         with:
           go-version-file: go.mod
-      - name: Build MyGo.app (universal)
+      - name: Build AirDroid.app (universal)
         run: make build
       - uses: actions/upload-artifact@v4
         with:
-          name: MyGo-macOS
+          name: AirDroid-macOS
           path: |
             build/darwin-universal/*.dmg
-            build/darwin-universal/MyGo.app
+            build/darwin-universal/AirDroid.app

@@ -12,7 +12,7 @@ import (
 )
 
 // Server is a scrcpy-server file and the version it was built as, which
-// the server checks against the version MyGo announces.
+// the server checks against the version AirDroid announces.
 type Server struct {
 	Path    string // the scrcpy-server file pushed to the device
 	Version string // as "5.0.1"; "" when unknown
@@ -34,7 +34,7 @@ var serverFileVersionRe = regexp.MustCompile(`scrcpy-server-v?(\d+\.\d+(?:\.\d+)
 // ResolveServer finds the scrcpy-server for path, which is either a scrcpy
 // executable, as Homebrew or scrcpy's releases install it, or a
 // scrcpy-server file itself. The version comes from the file next to it
-// (scrcpy-server.version, which MyGo's bundle carries), from running the
+// (scrcpy-server.version, which AirDroid's bundle carries), from running the
 // executable, or from the file's name.
 func ResolveServer(ctx context.Context, path string) (Server, error) {
 	if path == "" {

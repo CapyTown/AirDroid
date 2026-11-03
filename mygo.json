@@ -1,18 +1,24 @@
 {
-  "name": "MyGo",
-  "slug": "mygo",
-  "identifier": "dev.egoist.mygo",
+  "name": "AirDroid",
+  "slug": "airdroid",
+  "identifier": "com.capytown.airdroid",
   "version": "0.1.0",
-  "copyright": "© 2026 MyGo contributors",
+  "copyright": "© 2026 AirDroid contributors",
   "out": "build",
   "macos": {
     "minimumSystemVersion": "12.0",
     "infoPlist": {
       "LSUIElement": true,
       "LSApplicationCategoryType": "public.app-category.utilities",
-      "NSLocalNetworkUsageDescription": "MyGo connects to Android devices on your network for wireless debugging.",
-      "NSBonjourServices": ["_adb._tcp", "_adb-tls-connect._tcp", "_adb-tls-pairing._tcp"]
+      "NSLocalNetworkUsageDescription": "AirDroid connects to Android devices on your network for wireless debugging.",
+      "NSBonjourServices": [
+        "_adb._tcp",
+        "_adb-tls-connect._tcp",
+        "_adb-tls-pairing._tcp"
+      ]
     }
   },
-  "linux": { "webview": false }
+  "linux": {
+    "webview": false
+  }
 }

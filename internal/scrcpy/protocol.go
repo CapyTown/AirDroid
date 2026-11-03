@@ -2,7 +2,7 @@
 // project pushes to an Android device to capture its screen and audio and
 // inject input.
 //
-// MyGo starts the server itself (adb push, app_process), receives its
+// AirDroid starts the server itself (adb push, app_process), receives its
 // encoded video and audio streams over adb tunnels, and sends it control
 // messages, as the scrcpy client does. The encoded stream reaches the
 // decoder and, while recording, the file as it is: nothing is decoded or

@@ -289,7 +289,7 @@ func videoSampleEntry(v Video) ([]byte, error) {
 	b.u32(0)
 	b.u16(1) // frame_count
 	name := make([]byte, 32)
-	n := copy(name[1:], "MyGo")
+	n := copy(name[1:], "AirDroid")
 	name[0] = byte(n)
 	b.bytes(name)
 	b.u16(0x18)

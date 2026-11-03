@@ -701,7 +701,7 @@ func (m *mirror) input(ev ui.InputEvent, vw, vh float32) bool {
 		return true
 	case ui.InputKeyDown:
 		if ev.Mods&ui.Cmd != 0 {
-			return false // MyGo's shortcuts and menus
+			return false // AirDroid's shortcuts and menus
 		}
 		if textKey(ev.Key) && ev.Mods&^ui.Shift == 0 {
 			return false // typed as text, which InputText brings

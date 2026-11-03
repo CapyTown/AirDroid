@@ -138,7 +138,7 @@ func textKey(k ui.Key) bool {
 }
 
 // metaState converts modifiers to Android's meta state. Command is not
-// forwarded: it drives MyGo's own shortcuts.
+// forwarded: it drives AirDroid's own shortcuts.
 func metaState(m ui.Modifiers) int {
 	s := 0
 	if m&ui.Shift != 0 {

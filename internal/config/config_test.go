@@ -6,7 +6,7 @@ import (
 )
 
 func TestStoreRoundTrip(t *testing.T) {
-	path := filepath.Join(t.TempDir(), "MyGo", "config.json")
+	path := filepath.Join(t.TempDir(), "AirDroid", "config.json")
 	s, err := Open(path)
 	if err != nil {
 		t.Fatal(err)

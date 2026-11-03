@@ -20,7 +20,7 @@ import (
 )
 
 // The test binary doubles as a fake adb, which a shell script runs: "adb
-// reverse" records the port MyGo listens on, and "adb shell … app_process"
+// reverse" records the port AirDroid listens on, and "adb shell … app_process"
 // starts a fake scrcpy-server that connects there, as the real one does
 // through the tunnel, and speaks its protocol.
 

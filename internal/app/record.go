@@ -290,5 +290,5 @@ func recordingName(device string, stamp string) string {
 		}
 		return r
 	}, device)
-	return "MyGo " + name + " " + stamp
+	return "AirDroid " + name + " " + stamp
 }

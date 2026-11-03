@@ -1,120 +1,205 @@
-# MyGo
+<p align="center">
+  <img src="docs/images/hero.png" alt="AirDroid: an Android phone mirrored on a Mac, with its settings and the Add Device dialog" width="100%">
+</p>
 
-A macOS menu bar app that mirrors and controls Android phones, written in Go
-alone with the [MyGo](https://mygo.egoist.dev/) framework: no cgo, no
-Objective-C, no web view. Its windows are MyGo's native UI, drawn on the GPU,
-and it reaches macOS's frameworks through [purego](https://github.com/ebitengine/purego).
+<h1 align="center">AirDroid</h1>
 
-MyGo talks to phones through `adb` and streams their screens with
-`scrcpy-server`, both bundled. [escrcpy](https://github.com/viarotel-org/escrcpy)
-was the reference for how to drive scrcpy; none of its code or architecture is
-used.
+<p align="center">
+  <b>Your Android phone, in your Mac's menu bar.</b><br>
+  Mirror it, control it, screenshot and record it, over USB or Wi-Fi.
+</p>
 
-## What it does
+<p align="center">
+  <a href="https://github.com/CapyTown/AirDroid/releases"><img alt="Download" src="https://img.shields.io/badge/download-GitHub%20Releases-6a4ff0"></a>
+  <img alt="macOS 12 or later" src="https://img.shields.io/badge/macOS-12%2B-6a4ff0">
+  <img alt="Apple silicon and Intel" src="https://img.shields.io/badge/Apple%20silicon%20%26%20Intel-universal-6a4ff0">
+  <img alt="Android 5 or later" src="https://img.shields.io/badge/Android-5%2B-6a4ff0">
+</p>
 
-- **Menu bar.** The icon's menu lists connected devices, and their state
-  (unauthorized, offline). Click one to mirror it. The menu also offers known
-  Wi-Fi devices to reconnect, switching a USB device to Wi-Fi, and disconnecting.
-  While a recording runs, the icon shows a red dot and the menu a *Stop
-  Recording* item.
-- **Add Device.** A dialog (⌘N) for:
-  - USB, with live status;
-  - Wi-Fi by QR code (Android 11+ *Pair device with QR code*);
-  - Wi-Fi by six-digit pairing code;
-  - Wi-Fi by IP address, with recent addresses.
-- **Mirror window.** The device's screen, with its name and model in the
-  title bar. A sidebar beside it has:
-  - **Screenshot** (⌘S): a full-resolution PNG, saved and copied.
-  - **Record** (⇧⌘R): the button turns into a red stop button with a running
-    timer.
-  - **Rotate** (⌘R).
-  - **Settings** (⌘I): this device's mirroring options.
-  - **Recent apps** (⇧⌘A), **Home** (⇧⌘H) and **Back** (⌘B).
+<p align="center"><a href="#features">Features</a> · <a href="#install">Install</a> · <a href="#keyboard-shortcuts">Shortcuts</a> · <a href="#privacy">Privacy</a> · <a href="#known-limits">Known limits</a> · <a href="docs/development.md">Build from source</a></p>
 
-  Buttons light up on hover, show tooltips with their shortcuts, and show a
-  spinner while busy.
-- **Input.**
-  - The mouse is a finger: click and drag to touch. Right-click goes back,
-    middle-click goes home. The wheel and trackpad scroll.
-  - Typing goes to the phone, including input methods. Text Android cannot
-    type, such as Chinese or emoji, is pasted.
-  - ⌘V pastes the Mac's clipboard on the phone. Text copied on the phone
-    lands on the Mac's clipboard.
-- **Audio.** The phone's sound plays on the Mac (Android 11 and later).
-- **Settings** (⌘,) in three tabs:
-  - **General:** open at login, the Dock icon, where screenshots and
-    recordings go (~/Downloads unless changed), and the recording format.
-  - **Mirroring:** defaults for resolution, bit rate, frame rate, codec,
-    audio, screen off, stay awake, show touches, and keep on top.
-  - **Advanced:** bundled or custom `adb` and `scrcpy` paths, with their
-    versions shown, and restarting the adb server.
+AirDroid lives in the menu bar. Plug in your Android phone, or pair it over
+Wi-Fi, and it opens in a window on your Mac. The window is as sharp and smooth
+as the phone itself, with its sound. Tap with the mouse, type with the
+keyboard, paste from the Mac, take screenshots and record the screen from a
+small sidebar beside it.
 
-## How it works
+It is a native Mac app of a few megabytes, built in Go with
+[MyGo](https://github.com/egoist/mygo), with no browser engine inside. It
+needs nothing installed on the phone or the Mac: `adb` and
+[scrcpy](https://github.com/Genymobile/scrcpy) come inside the app.
 
-```
-phone ── scrcpy-server ──adb tunnel──► internal/scrcpy (Go: demux, control)
-                                        │ encoded H.264/H.265 access units
-                         ┌──────────────┴──────────────┐
-                         ▼                             ▼
-             internal/vt: VideoToolbox        internal/app recorder goroutine
-             (GPU decode + scale, purego)     internal/mp4: passthrough muxer
-                         │ RGBA at window size         │ same bytes → .mov/.mp4
-                         ▼                             ▼
-                 ui.Bitmap in the window          ~/Downloads
-```
+## Features
 
-- **Native client of scrcpy-server.** MyGo pushes the bundled
-  `scrcpy-server`, opens an `adb reverse` tunnel (falling back to
-  `adb forward`), starts the server and reads its video, audio and control
-  sockets. It handles both stream framings: scrcpy 2.x–3.x, and 4.0 and later
-  with session headers. If the server reports a different version than the one
-  announced, MyGo learns it and retries, so a custom scrcpy of another version
-  works too.
-- **Decoding** is VideoToolbox on the GPU. Frames are scaled there to the
-  pixels they show at, and only that picture crosses to the CPU.
-- **Recording takes no extra encoder or decoder.** It writes the H.264/H.265
-  access units the phone already encoded, the same bytes the decoder gets,
-  into the movie. This is what scrcpy's own `--record` does: a pure-Go muxer
-  writing a QuickTime movie, or an MP4 for video only.
-  - It runs on its own goroutine behind a queue, so a slow disk never holds up
-    the picture or the input.
-  - It keeps the frames since the last key frame. A recording therefore
-    starts at the frame shown when you press the button, with no wait for a
-    key frame and no encoder reset; an edit list hides the frames before it.
-  - Rotating the phone starts a new file.
-  - Stopping writes the index at once. Quitting waits for it.
-  - A write error stops the recording, says so, and keeps mirroring.
-- **Audio** comes as raw PCM: nothing to decode, played by MyGo's mixer
-  with about 60 ms of jitter buffer. It is recorded as PCM in MOV files.
-- **Device list** comes from the adb server's `host:track-devices-l` socket,
-  without polling.
+### Mirror and control
 
-## Build
+<p align="center"><img src="docs/images/mirror.png" alt="A phone mirrored in AirDroid's window, with the sidebar beside it" width="420"></p>
 
-Go 1.27 or later. `make` downloads scrcpy 5.0.1's official macOS release
-(SHA-256 checked) into `resources/`, which MyGo bundles into the app.
+- **The phone's screen in a window**, up to its full resolution and 120 frames
+  a second. The video is decoded on the Mac's GPU and scaled to the window, so
+  even a large window stays light. Resize it and the picture keeps its shape;
+  rotate the phone and the window turns with it.
+- **Use it as you use the phone.** Click and drag to tap and swipe, and scroll
+  with the trackpad or the wheel. Right-click goes back, middle-click goes
+  home.
+- **Type with your keyboard,** in any language and with your input methods.
+  Chinese, Japanese, emoji: what Android cannot type directly, AirDroid pastes
+  for you.
+- **One clipboard.** ⌘V pastes what you copied on the Mac into the phone, and
+  what you copy on the phone is ready to paste on the Mac.
+- **The phone's sound plays on the Mac** (Android 11 and later).
 
-```sh
-make dev     # run it, rebuilt on changes
-make build   # build/darwin-universal/MyGo.app and its .dmg
-make test    # unit and end-to-end tests (ffmpeg checks the recordings)
-make vet     # go vet for darwin, and mygo vet for native UI lifetimes
-```
+### A sidebar of shortcuts
 
-Everything builds with `CGO_ENABLED=0`, from any OS. The disk image and code
-signing need a Mac; `.github/workflows/ci.yml` builds the app on a macOS
-runner.
+| Recording | Device settings |
+|---|---|
+| <img src="docs/images/recording.png" alt="Recording: the red stop button and its timer"> | <img src="docs/images/device-settings.png" alt="The mirroring settings of one device, beside the sidebar"> |
 
-## Layout
+Beside the picture, two small groups of buttons, each with a tooltip and its
+shortcut:
+
+- **Screenshot** saves a full-resolution PNG and copies it, with a flash to say
+  it's done.
+- **Record** starts recording at once, and turns into a red stop button with a
+  timer while it runs.
+- **Rotate** turns the phone between portrait and landscape.
+- **Settings** sets this phone's resolution, bit rate, frame rate, codec,
+  sound, screen-off and stay-awake, without leaving the window.
+- **Recent apps, Home and Back,** as on the phone.
+
+### Recording that costs nothing
+
+- **No quality lost, no fans spinning.** AirDroid records the video exactly as
+  the phone sends it: nothing is decoded or compressed again. A recording takes
+  no extra CPU or GPU, and the picture stays as smooth while you record.
+- **It starts the moment you press the button,** at the frame you see, with no
+  wait.
+- **Never interrupts you.** Recording runs in the background, so mirroring and
+  input never stutter. If the disk fills up, the recording stops and says why,
+  and mirroring goes on.
+- **MOV with sound, or MP4,** playable in QuickTime, Photos, iMovie and
+  everywhere else. Rotate the phone during a recording and AirDroid starts a
+  new file, so each video keeps one shape.
+- **Safe on quit:** quitting while recording finishes the file first.
+
+### Add a phone, over USB or Wi-Fi
+
+| USB | Wi-Fi |
+|---|---|
+| <img src="docs/images/add-usb.png" alt="Add Device over USB, with the steps and the phone found"> | <img src="docs/images/add-wifi.png" alt="Add Device over Wi-Fi, with a QR code to scan"> |
+
+- **USB:** three steps to turn on USB debugging, and the phone shows up as soon
+  as it's plugged in, with what to do if it asks for permission.
+- **Wi-Fi, by QR code:** on Android 11 and later, scan the code from *Wireless
+  debugging*. AirDroid pairs and connects; no cable needed, ever.
+- **Wi-Fi, by pairing code or address,** for any phone; recent addresses are
+  one click away.
+- **Cut the cable:** *Use Wi-Fi* moves a phone plugged in over USB to Wi-Fi,
+  so you can unplug it and carry on.
+
+### In the menu bar
+
+- **Every phone at a glance:** connected, waiting for permission or offline,
+  over USB or Wi-Fi. Click one to mirror it.
+- **Phones you used over Wi-Fi** reconnect from the menu.
+- **While a recording runs,** the icon shows a red dot and the menu offers
+  *Stop Recording*.
+- **AirDroid stays out of the Dock** until you open a window, and leaves it
+  when you close them (you can keep it there in Settings).
+
+### Settings
+
+| General | Mirroring |
+|---|---|
+| <img src="docs/images/settings-general.png" alt="Settings, General"> | <img src="docs/images/settings-mirroring.png" alt="Settings, Mirroring"> |
+
+- **General:**
+  - Open at login, and the Dock icon.
+  - Where screenshots and recordings go: your Downloads folder, unless you
+    choose another.
+  - Whether screenshots are copied too.
+  - MOV or MP4, and the phone's sound in recordings.
+- **Mirroring:** the defaults for every phone: resolution, bit rate, frame rate, H.264 or
+  H.265, sound, the phone's screen off while mirroring, stay awake, show
+  touches, and keep the window on top. Each phone can have its own, from its
+  window's sidebar.
+- **Advanced:** AirDroid comes with `adb` and `scrcpy`, and can use yours
+  instead, such as Homebrew's or Android Studio's, showing the version of each.
+
+## Install
+
+**Requirements**
+- A Mac with macOS 12 or later, Apple silicon or Intel.
+- An Android phone with **USB debugging** on (Android 5 and later).
+  - Sound needs Android 11 or later.
+  - Pairing over Wi-Fi without a cable needs Android 11 or later.
+
+**Steps**
+1. Download the latest `.dmg` from
+   [Releases](https://github.com/CapyTown/AirDroid/releases). No release yet?
+   [Build it](docs/development.md): one command.
+2. Drag **AirDroid** to Applications and open it. Its icon appears in the menu
+   bar.
+3. Choose **Add Device…** and follow the steps for USB or Wi-Fi.
+
+**On the phone:** open *Settings › About phone*, tap *Build number* seven
+times, then turn on *USB debugging* in *Developer options*. The first time you
+connect, tap **Allow** on the phone.
+
+## Keyboard shortcuts
 
 | | |
 |---|---|
-| `main.go` | entry point |
-| `internal/app` | the app: tray menu, mirror window, sidebar, settings, Add Device, recorder, audio |
-| `internal/scrcpy` | scrcpy-server client: launch, tunnels, stream framing, control and device messages |
-| `internal/adb` | adb: device tracking over the server socket, device info, Wi-Fi, pairing, screencap |
-| `internal/vt` | VideoToolbox decoding through purego |
-| `internal/media` | H.264/H.265: Annex B, parameter sets, SPS parsing, avcC/hvcC |
-| `internal/mp4` | MP4/QuickTime passthrough writer |
-| `internal/config` | settings, defaults and per-device options |
-| `scripts/fetch-scrcpy.sh` | downloads the bundled scrcpy and adb |
+| ⌘S | Screenshot |
+| ⇧⌘R | Start or stop recording |
+| ⌘R | Rotate |
+| ⌘I | This phone's settings |
+| ⌘B · ⇧⌘H · ⇧⌘A | Back · Home · Recent apps |
+| ⇧⌘N | Pull down the notifications |
+| ⌘↑ · ⌘↓ · ⌘P | Volume up · Volume down · Power |
+| ⌘V | Paste the Mac's clipboard on the phone |
+| ⌘N · ⌘, | Add Device · Settings |
+| Right-click · Middle-click | Back · Home |
+
+## Privacy
+
+- **Everything stays between your Mac and your phone.** The picture, the sound
+  and your typing go over the USB cable or your own Wi-Fi network, and nowhere
+  else.
+- **No account, no analytics, no cloud.** AirDroid sends nothing about you
+  anywhere. It connects to the internet only when you click *Check for
+  Updates* or *Send Feedback*, which open GitHub in your browser.
+- **Nothing is installed on the phone.** The small scrcpy server AirDroid
+  starts runs only while a window is open, and leaves the phone as it was:
+  settings such as *show touches* and *stay awake* go back when you close the
+  window.
+- Screenshots and recordings are saved where you choose, and nowhere else.
+- macOS asks once for **Local Network** access, which Wi-Fi pairing and
+  connecting need.
+
+## Known limits
+
+- **Recording sound** needs MOV: MP4 recordings hold the video only. Both are
+  set in Settings › General.
+- **Sound** comes from Android 11 and later; on older phones, AirDroid mirrors
+  the picture alone.
+- **Codecs:** H.264 and H.265, decoded by the Mac's hardware. Choose H.264 for
+  older phones whose H.265 encoder is unreliable.
+- **One finger:** the mouse is a single touch; pinch gestures are not sent yet.
+  *Open in scrcpy Window* (in the Device menu) opens the phone in scrcpy's own
+  window for what AirDroid's does not do.
+- **Builds you make yourself** are signed ad hoc: macOS asks you to confirm
+  the first time you open them (right-click › Open).
+
+## Credits
+
+- Screen mirroring by [scrcpy](https://github.com/Genymobile/scrcpy) (Apache
+  2.0), whose server AirDroid drives, and adb from Android's platform tools
+  (Apache 2.0). [escrcpy](https://github.com/viarotel-org/escrcpy) was the
+  reference for how to work with scrcpy.
+- Built with [MyGo](https://github.com/egoist/mygo) (MIT) and
+  [purego](https://github.com/ebitengine/purego) (Apache 2.0).
+- Icons from [Lucide](https://lucide.dev) (ISC).
+
+See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). How AirDroid works, how
+to build it and how to help: [docs/](docs/README.md).

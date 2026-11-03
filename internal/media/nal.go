@@ -38,7 +38,7 @@ func NALType(c Codec, nal []byte) int {
 	return int(nal[0] & 0x1f)
 }
 
-// NAL unit types MyGo cares about.
+// NAL unit types AirDroid cares about.
 const (
 	h264IDR = 5
 	h264SPS = 7

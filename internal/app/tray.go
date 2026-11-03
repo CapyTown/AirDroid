@@ -110,19 +110,19 @@ func (a *App) refreshMenu() {
 	add(&mygo.MenuItem{Label: "Add Device…", Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }})
 	add(mygo.Separator())
 	add(&mygo.MenuItem{Label: "Settings…", Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }})
-	add(&mygo.MenuItem{Role: mygo.RoleQuit, Label: "Quit MyGo"})
+	add(&mygo.MenuItem{Role: mygo.RoleQuit, Label: "Quit AirDroid"})
 
 	a.tray.SetMenu(mygo.NewMenu(items))
 	if recording {
 		_ = a.tray.SetIcon(trayIconRecPNG, false)
-		a.tray.SetToolTip("MyGo — recording")
+		a.tray.SetToolTip("AirDroid — recording")
 	} else {
 		_ = a.tray.SetIcon(trayIconPNG, true)
-		a.tray.SetToolTip("MyGo")
+		a.tray.SetToolTip("AirDroid")
 	}
 }
 
-// menuBar is the app's menu bar, shown while a window of MyGo is open.
+// menuBar is the app's menu bar, shown while a window of AirDroid is open.
 func (a *App) menuBar() *mygo.Menu {
 	onMirror := func(fn func(m *mirror)) func(*mygo.MenuItem, *mygo.Window) {
 		return func(_ *mygo.MenuItem, w *mygo.Window) {
@@ -132,8 +132,8 @@ func (a *App) menuBar() *mygo.Menu {
 		}
 	}
 	return mygo.NewMenu([]*mygo.MenuItem{
-		{Label: "MyGo", Submenu: []*mygo.MenuItem{
-			{Role: mygo.RoleAbout, Label: "About MyGo"},
+		{Label: "AirDroid", Submenu: []*mygo.MenuItem{
+			{Role: mygo.RoleAbout, Label: "About AirDroid"},
 			mygo.Separator(),
 			{Label: "Settings…", Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }},
 			mygo.Separator(),
@@ -141,7 +141,7 @@ func (a *App) menuBar() *mygo.Menu {
 			{Role: mygo.RoleHideOthers},
 			{Role: mygo.RoleUnhide},
 			mygo.Separator(),
-			{Role: mygo.RoleQuit, Label: "Quit MyGo"},
+			{Role: mygo.RoleQuit, Label: "Quit AirDroid"},
 		}},
 		{Label: "File", Submenu: []*mygo.MenuItem{
 			{Label: "Add Device…", Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }},

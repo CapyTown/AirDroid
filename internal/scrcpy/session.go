@@ -193,8 +193,8 @@ func (s *Session) socketCount() int {
 }
 
 // connect opens the tunnel, starts the server and accepts its sockets:
-// through "adb reverse", the device connecting to MyGo, else through "adb
-// forward", MyGo connecting to the device.
+// through "adb reverse", the device connecting to AirDroid, else through "adb
+// forward", AirDroid connecting to the device.
 func (s *Session) connect(ctx context.Context) error {
 	scid := randomSCID()
 	name := fmt.Sprintf("localabstract:scrcpy_%08x", scid)

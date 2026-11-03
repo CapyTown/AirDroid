@@ -66,7 +66,7 @@ func (i Info) Subtitle() string {
 	return strings.Join(parts, " · ")
 }
 
-// Identity keys what MyGo remembers about the device: the hardware serial,
+// Identity keys what AirDroid remembers about the device: the hardware serial,
 // else adb's.
 func (i Info) Identity() string {
 	if i.HWSerial != "" {
@@ -169,7 +169,7 @@ type QRPairing struct {
 
 // NewQRPairing makes a pairing offer with a random name and password.
 func NewQRPairing() QRPairing {
-	return QRPairing{Name: "mygo-" + randomString(6), Password: randomString(10)}
+	return QRPairing{Name: "airdroid-" + randomString(6), Password: randomString(10)}
 }
 
 // Payload is the text of the QR code.

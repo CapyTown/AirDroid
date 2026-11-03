@@ -149,7 +149,7 @@ func (s *settingsWindow) general(c *ui.Context) {
 			}()
 		}
 		hide := s.cfg.HideDockIconWhenClosed
-		if switchRow(c, "dock", "Hide Dock icon when closed", "With MyGo in the menu bar, closing its windows takes it out of the Dock.", &hide) {
+		if switchRow(c, "dock", "Hide Dock icon when closed", "With AirDroid in the menu bar, closing its windows takes it out of the Dock.", &hide) {
 			s.save(func(c *config.Config) { c.HideDockIconWhenClosed = hide })
 			s.app.windowsChanged()
 		}
@@ -198,7 +198,7 @@ func (s *settingsWindow) general(c *ui.Context) {
 		if version == "" {
 			version = "development build"
 		}
-		formRow(c, "MyGo "+version, "Updates are published on GitHub.", func() {
+		formRow(c, "AirDroid "+version, "Updates are published on GitHub.", func() {
 			if ui.Button(c.Key("updates"), "Check for Updates…").Clicked() {
 				mygo.Shell.OpenExternal(ReleasesURL)
 			}
@@ -252,7 +252,7 @@ func (s *settingsWindow) mirroring(c *ui.Context) {
 
 func (s *settingsWindow) advanced(c *ui.Context) {
 	t := c.Theme()
-	sectionNote(c, "MyGo comes with adb and scrcpy. Choose others to use, such as the ones Homebrew or Android Studio install.")
+	sectionNote(c, "AirDroid comes with adb and scrcpy. Choose others to use, such as the ones Homebrew or Android Studio install.")
 	section(c, func() {
 		s.toolRow(c, "adb", "adb", &s.adbCustom, s.cfg.ADBPath, s.adbStatus, BundledADB(), func(path string) {
 			s.save(func(c *config.Config) { c.ADBPath = path })
@@ -325,7 +325,7 @@ func (s *settingsWindow) toolRow(c *ui.Context, key, name string, custom *bool, 
 			}
 		})
 	} else if bundledPath == "" {
-		ui.Text(c, "This build has no bundled "+name+": MyGo looks for one on your PATH.").FontSize(11.5).TextColor(t.TextMuted).Padding(0, 0, 10, 0)
+		ui.Text(c, "This build has no bundled "+name+": AirDroid looks for one on your PATH.").FontSize(11.5).TextColor(t.TextMuted).Padding(0, 0, 10, 0)
 	}
 }
 

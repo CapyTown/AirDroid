@@ -1,4 +1,4 @@
-// Package app is MyGo: a menu bar app that mirrors and controls Android
+// Package app is AirDroid: a menu bar app that mirrors and controls Android
 // devices, built with the MyGo framework and its native UI.
 package app
 
@@ -57,7 +57,7 @@ func (d *Device) Transport() string {
 	return "USB"
 }
 
-// App is MyGo's state. Everything in it is read and changed on the main
+// App is AirDroid's state. Everything in it is read and changed on the main
 // thread; goroutines hand their results over with mygo.RunOnMain or a
 // window's Update.
 type App struct {
@@ -84,7 +84,7 @@ type App struct {
 	stopping []*recorder
 }
 
-// New prepares the app; Start runs once MyGo is ready.
+// New prepares the app; Start runs once AirDroid is ready.
 func New() (*App, error) {
 	store, err := config.Open(config.DefaultPath())
 	if err != nil {
@@ -113,10 +113,10 @@ func (a *App) Start() {
 	})
 	mygo.App.OnQuit(a.shutdown)
 	tray, err := mygo.NewTray(mygo.TrayOptions{
-		ID:             "mygo",
+		ID:             "airdroid",
 		Icon:           trayIconPNG,
 		IconIsTemplate: true,
-		ToolTip:        "MyGo",
+		ToolTip:        "AirDroid",
 	})
 	if err != nil {
 		slog.Error("tray", "err", err)
@@ -175,13 +175,13 @@ func bundled(rel ...string) string {
 	return ""
 }
 
-// BundledADB is the adb shipped with MyGo.
+// BundledADB is the adb shipped with AirDroid.
 func BundledADB() string { return bundled("bin", "adb") }
 
-// BundledScrcpy is the scrcpy-server shipped with MyGo.
+// BundledScrcpy is the scrcpy-server shipped with AirDroid.
 func BundledScrcpy() string { return bundled("scrcpy-server") }
 
-// BundledScrcpyBinary is the scrcpy executable shipped with MyGo.
+// BundledScrcpyBinary is the scrcpy executable shipped with AirDroid.
 func BundledScrcpyBinary() string { return bundled("bin", "scrcpy") }
 
 func lookTool(name string) string {
@@ -225,7 +225,7 @@ func (a *App) scrcpyPath() string {
 }
 
 // openInScrcpy mirrors a device in scrcpy's own window, with the same adb
-// and server: a fallback for what MyGo's window does not do.
+// and server: a fallback for what AirDroid's window does not do.
 func (a *App) openInScrcpy(serial string) {
 	server, _ := a.resolveServer()
 	bin := server.Binary
@@ -492,7 +492,7 @@ func (a *App) mirrorOf(w *mygo.Window) *mirror {
 	return nil
 }
 
-// windowsChanged shows MyGo in the Dock while it has windows open, unless
+// windowsChanged shows AirDroid in the Dock while it has windows open, unless
 // the user wants it there always.
 func (a *App) windowsChanged() {
 	open := len(a.mirrors) > 0 || a.settings != nil || a.add != nil

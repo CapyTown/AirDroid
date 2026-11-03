@@ -2,7 +2,7 @@
 // adb server's host protocol.
 //
 // Long-lived queries, such as the list of devices, use the server's socket
-// directly (host:track-devices-l), so that MyGo learns about devices the
+// directly (host:track-devices-l), so that AirDroid learns about devices the
 // moment they come and go without polling. One-shot commands run the adb
 // executable, which also starts the server when it is not running.
 package adb

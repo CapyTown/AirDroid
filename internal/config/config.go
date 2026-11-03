@@ -1,4 +1,4 @@
-// Package config holds MyGo's persistent settings.
+// Package config holds AirDroid's persistent settings.
 //
 // Settings live in a single JSON file under the user's Application Support
 // directory. Global mirroring options act as defaults; each device may carry
@@ -16,7 +16,7 @@ import (
 	"time"
 )
 
-// Video codecs MyGo can render with VideoToolbox.
+// Video codecs AirDroid can render with VideoToolbox.
 const (
 	CodecH264 = "h264"
 	CodecH265 = "h265"
@@ -78,7 +78,7 @@ func (o MirrorOptions) RequiresRestart(n MirrorOptions) bool {
 		o.StayAwake != n.StayAwake || o.ShowTouches != n.ShowTouches || o.PowerOffOnClose != n.PowerOffOnClose
 }
 
-// DeviceProfile is what MyGo remembers about one phone.
+// DeviceProfile is what AirDroid remembers about one phone.
 type DeviceProfile struct {
 	Name     string         `json:"name,omitempty"`
 	Override *MirrorOptions `json:"override,omitempty"`
@@ -130,14 +130,14 @@ type Store struct {
 	cfg  Config
 }
 
-// DefaultPath is ~/Library/Application Support/MyGo/config.json.
+// DefaultPath is ~/Library/Application Support/AirDroid/config.json.
 func DefaultPath() string {
 	dir, err := os.UserConfigDir()
 	if err != nil {
 		home, _ := os.UserHomeDir()
 		dir = filepath.Join(home, "Library", "Application Support")
 	}
-	return filepath.Join(dir, "MyGo", "config.json")
+	return filepath.Join(dir, "AirDroid", "config.json")
 }
 
 // Open loads the settings at path, falling back to defaults when the file is
