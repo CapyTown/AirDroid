@@ -12,9 +12,10 @@
   <img alt="macOS 12 or later" src="https://img.shields.io/badge/macOS-12%2B-6a4ff0">
   <img alt="Apple silicon and Intel" src="https://img.shields.io/badge/Apple%20silicon%20%26%20Intel-universal-6a4ff0">
   <img alt="Android 5 or later" src="https://img.shields.io/badge/Android-5%2B-6a4ff0">
+  <a href="LICENSE"><img alt="MIT" src="https://img.shields.io/badge/licence-MIT-6a4ff0"></a>
 </p>
 
-<p align="center"><a href="#features">Features</a> · <a href="#install">Install</a> · <a href="#keyboard-shortcuts">Shortcuts</a> · <a href="#privacy">Privacy</a> · <a href="#known-limits">Known limits</a> · <a href="docs/development.md">Build from source</a></p>
+<p align="center"><a href="#features">Features</a> · <a href="#install">Install</a> · <a href="#keyboard-shortcuts">Shortcuts</a> · <a href="#privacy">Privacy</a> · <a href="#known-limits">Known limits</a> · <a href="docs/development.md">Build from source</a> · <a href="#licence">Licence</a></p>
 
 AirDroid lives in the menu bar. Plug in your Android phone, or pair it over
 Wi-Fi, and it opens in a window on your Mac. The window is as sharp and smooth
@@ -199,5 +200,10 @@ connect, tap **Allow** on the phone.
   [purego](https://github.com/ebitengine/purego) (Apache 2.0).
 - Icons from [Lucide](https://lucide.dev) (ISC).
 
-See [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). How AirDroid works, how
-to build it and how to help: [docs/](docs/README.md).
+See [third-party notices](docs/third-party-notices.md). How AirDroid works,
+how to build it and how to help: [docs/](docs/README.md).
+
+## Licence
+
+AirDroid is released under the [MIT License](LICENSE). The scrcpy, scrcpy-server
+and adb it bundles keep their own licence, the Apache License 2.0.

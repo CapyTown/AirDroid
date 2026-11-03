@@ -7,3 +7,5 @@ the [README](../README.md).
   recording work, and where each part lives in the code.
 - [Development](development.md): building, running, testing, packaging and
   the screenshots of the README.
+- [Third-party notices](third-party-notices.md): what AirDroid bundles and
+  uses, and their licences.
