@@ -52,10 +52,10 @@ func thisComputer() string {
 }
 
 // deviceSubtitle is what follows a device's name in its window's title
-// bar: "Android 15 · e28ce14b", its Android version and adb serial.
+// bar: "· Android 15".
 func deviceSubtitle(info adb.Info, serial string) string {
 	if info.Release == "" {
-		return serial
+		return ""
 	}
-	return "Android " + info.Release + " · " + serial
+	return "· Android " + info.Release
 }

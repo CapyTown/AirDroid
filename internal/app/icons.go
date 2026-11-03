@@ -29,6 +29,7 @@ var (
 	iconPhone     = svg(`<rect x="6" y="2" width="12" height="20" rx="2.5"/><path d="M11 18h2"/>`)
 	iconMirror    = svg(`<rect x="2" y="3" width="13" height="10" rx="2"/><rect x="16" y="8" width="6" height="13" rx="1.5"/><path d="M6 17h6"/><path d="M9 13v4"/>`)
 	iconKeyboard  = svg(`<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M6 9h.01M10 9h.01M14 9h.01M18 9h.01M6 12.5h.01M10 12.5h.01M14 12.5h.01M18 12.5h.01M8 16h8"/>`)
+	iconInfo      = svg(`<circle cx="12" cy="12" r="9"/><path d="M12 11v5"/><path d="M12 8h.01"/>`)
 	iconTools     = svg(`<path d="M4 17l6-6-6-6"/><path d="M12 19h8"/>`)
 	iconUSB       = svg(`<rect x="8" y="2" width="8" height="6" rx="1"/><path d="M7 8h10v5a5 5 0 0 1-10 0z"/><path d="M12 18v4"/>`)
 	iconWiFi      = svg(`<path d="M12 20h.01"/><path d="M2 8.82a15 15 0 0 1 20 0"/><path d="M5 12.86a10 10 0 0 1 14 0"/><path d="M8.5 16.43a5 5 0 0 1 7 0"/>`)

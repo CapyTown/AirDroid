@@ -49,7 +49,7 @@ func TestDocsImages(t *testing.T) {
 	s := &settingsWindow{app: a, cfg: a.cfg.Get(), openAtLogin: true,
 		adbStatus:    "adb 36.0.0 · /Applications/AirDroid.app/Contents/Resources/bin/adb",
 		scrcpyStatus: "scrcpy-server 5.0.1 · /Applications/AirDroid.app/Contents/Resources/scrcpy-server"}
-	for _, page := range []string{"general", "mirroring", "shortcuts", "advanced"} {
+	for _, page := range []string{"general", "mirroring", "shortcuts", "advanced", "about"} {
 		s.page = page
 		save("settings-"+page, ui.Render(s.view, 860, 600, 2))
 	}

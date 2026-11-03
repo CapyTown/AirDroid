@@ -65,6 +65,10 @@ shortcut:
   it's done.
 - **Record** starts recording at once, and turns into a green stop button with
   a timer while it runs.
+- **Phone screen off** turns the phone's own screen dark while you mirror it.
+  While the phone is locked, its screen lights up again, so you can unlock it
+  with your fingerprint, face or PIN; once it is unlocked, the screen goes dark
+  again by itself.
 - **Settings** opens this phone's resolution, bit rate, frame rate, codec,
   sound, screen-off and stay-awake in a small window of their own, beside the
   mirror, which you can move anywhere while you watch the change.
@@ -132,6 +136,9 @@ Settings has its pages in a sidebar on the left, the page on the right.
   window's sidebar.
 - **Shortcuts:** every key and click of a device's window, as your platform
   writes them.
+- **About:** the version, updates, feedback, and the open-source projects
+  AirDroid is made with and ships, with their licences. *About AirDroid* in
+  the menus opens it.
 - **Advanced:** AirDroid comes with `adb` and `scrcpy`, and can use yours
   instead, such as Homebrew's, your Linux distribution's or Android Studio's,
   showing the version of each.

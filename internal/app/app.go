@@ -26,6 +26,7 @@ import (
 var (
 	ReleasesURL = "https://github.com/CapyTown/AirDroid/releases"
 	IssuesURL   = "https://github.com/CapyTown/AirDroid/issues/new"
+	SourceURL   = "https://github.com/CapyTown/AirDroid"
 )
 
 // Device is a device the adb server lists.

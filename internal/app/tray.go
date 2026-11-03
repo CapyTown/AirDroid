@@ -110,6 +110,7 @@ func (a *App) refreshMenu() {
 	add(&mygo.MenuItem{Label: "Add Device…", Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }})
 	add(mygo.Separator())
 	add(&mygo.MenuItem{Label: "Settings…", Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }})
+	add(&mygo.MenuItem{Label: "About AirDroid", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettingsPage("about") }})
 	add(&mygo.MenuItem{Role: mygo.RoleQuit, Label: "Quit"})
 
 	a.tray.SetMenu(mygo.NewMenu(items))
@@ -133,7 +134,7 @@ func (a *App) menuBar() *mygo.Menu {
 	}
 	return mygo.NewMenu([]*mygo.MenuItem{
 		{Label: "AirDroid", Submenu: []*mygo.MenuItem{
-			{Role: mygo.RoleAbout, Label: "About AirDroid"},
+			{Label: "About AirDroid", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettingsPage("about") }},
 			mygo.Separator(),
 			{Label: "Settings…", Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }},
 			mygo.Separator(),

@@ -46,7 +46,7 @@ func testMirror(t *testing.T) *mirror {
 		app:      a,
 		serial:   "R5CT",
 		title:    "OnePlus Ace 3V",
-		subtitle: "Android 15 · e28ce14b",
+		subtitle: "· Android 15",
 		keysDown: map[ui.Key]int{},
 		frameW:   1080,
 		frameH:   2400,
@@ -108,7 +108,7 @@ func TestVideoRect(t *testing.T) {
 func TestSettingsView(t *testing.T) {
 	a := testApp(t)
 	s := &settingsWindow{app: a, cfg: a.cfg.Get()}
-	for _, page := range []string{"general", "mirroring", "shortcuts", "advanced"} {
+	for _, page := range []string{"general", "mirroring", "shortcuts", "advanced", "about"} {
 		s.page = page
 		snapshot(t, "settings-"+page, s.view, 860, 600)
 	}

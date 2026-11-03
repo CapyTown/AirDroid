@@ -38,17 +38,17 @@ func (m *mirror) view(c *ui.Context) {
 	bar := c.TitleBar()
 	ui.Column(c).Fill().Children(func() {
 		// Title bar, one line centered on the window controls: the device's
-		// name in bold, then its Android version and adb serial. Drag to
-		// move, double-click to zoom.
+		// name in bold, then "· Android 15". Drag to move, double-click to
+		// zoom.
 		rowH := bar.Height
 		if rowH < 24 {
 			rowH = 28
 		}
 		ui.Row(c).FillWidth().Height(chromeTop).Padding(0, bar.Right+14, max(0, chromeTop-rowH), bar.Left+10).
-			AlignItems(ui.Center).Gap(8).DragWindow().Children(func() {
+			AlignItems(ui.Center).Gap(6).DragWindow().Children(func() {
 			ui.Text(c, m.title).FontSize(14).Bold().SingleLine().Ellipsis("…").Shrink(0)
 			if m.subtitle != "" {
-				ui.Text(c, m.subtitle).FontSize(13).TextColor(t.TextMuted).SingleLine().Ellipsis("…").Shrink(1)
+				ui.Text(c, m.subtitle).FontSize(14).TextColor(t.TextMuted).SingleLine().Ellipsis("…").Shrink(1)
 			}
 		})
 

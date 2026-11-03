@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	_ "embed"
 	"os"
 	"path/filepath"
 	"strings"
@@ -38,6 +39,7 @@ var settingsPages = []struct {
 	{"mirroring", "Mirroring", iconMirror},
 	{"shortcuts", "Shortcuts", iconKeyboard},
 	{"advanced", "Advanced", iconTools},
+	{"about", "About", iconInfo},
 }
 
 func pageName(id string) string {
@@ -49,14 +51,25 @@ func pageName(id string) string {
 	return ""
 }
 
-func (a *App) openSettings() {
+func (a *App) openSettings() { a.openSettingsPage("") }
+
+// openSettingsPage opens the settings at a page, as "about"; "" keeps the
+// page the window shows.
+func (a *App) openSettingsPage(page string) {
 	if a.settings != nil {
+		if page != "" {
+			a.settings.page = page
+			a.settings.win.Invalidate()
+		}
 		a.settings.win.Show()
 		a.settings.win.Focus()
 		mygo.App.Focus()
 		return
 	}
-	s := &settingsWindow{app: a, page: "general", cfg: a.cfg.Get(), openAtLogin: mygo.App.OpenAtLogin()}
+	if page == "" {
+		page = "general"
+	}
+	s := &settingsWindow{app: a, page: page, cfg: a.cfg.Get(), openAtLogin: mygo.App.OpenAtLogin()}
 	s.adbCustom = s.cfg.ADBPath != ""
 	s.scrcpyCustom = s.cfg.ScrcpyPath != ""
 	s.win = mygo.NewWindow(mygo.WindowOptions{
@@ -130,6 +143,8 @@ func (s *settingsWindow) view(c *ui.Context) {
 						s.shortcuts(c)
 					case "advanced":
 						s.advanced(c)
+					case "about":
+						s.about(c)
 					default:
 						s.general(c)
 					}
@@ -145,7 +160,6 @@ func sectionHeading(c *ui.Context, title string) {
 }
 
 func (s *settingsWindow) general(c *ui.Context) {
-	t := c.Theme()
 	sectionHeading(c, "Startup")
 	section(c, func() {
 		if switchRow(c, "login", "Open at login", "Starts in the background, without opening a window.", &s.openAtLogin) {
@@ -205,21 +219,70 @@ func (s *settingsWindow) general(c *ui.Context) {
 		}
 	})
 
-	sectionHeading(c, "About")
-	section(c, func() {
-		version := mygo.App.Version()
-		if version == "" {
-			version = "development build"
+}
+
+// openSource lists what AirDroid is made with and ships, with licences.
+var openSource = []struct{ name, licence, note, url string }{
+	{"scrcpy", "Apache-2.0", "Mirrors the screen: its server runs on the phone", "https://github.com/Genymobile/scrcpy"},
+	{"Android SDK Platform-Tools", "Apache-2.0", "adb, which reaches the phone", "https://developer.android.com/tools/releases/platform-tools"},
+	{"FFmpeg", "GPL-3.0", "Decodes the video on Windows and Linux", "https://ffmpeg.org"},
+	{"MyGo", "MIT", "The app framework and its native UI", "https://github.com/egoist/mygo"},
+	{"purego", "Apache-2.0", "Calls the system's libraries without cgo", "https://github.com/ebitengine/purego"},
+	{"go-text/typesetting", "BSD-3-Clause or Unlicense", "Shapes text", "https://github.com/go-text/typesetting"},
+	{"Go x/image, x/net, x/text", "BSD-3-Clause", "Images, networking and text", "https://pkg.go.dev/golang.org/x"},
+	{"rsc.io/qr", "BSD-3-Clause", "Draws the pairing QR code", "https://github.com/rsc/qr"},
+	{"Lucide", "ISC", "Icons", "https://lucide.dev"},
+}
+
+//go:embed assets/logo.png
+var logoPNG []byte
+
+var logoBitmap *ui.Bitmap
+
+// about shows AirDroid's version, where it comes from, and what it is
+// made with.
+func (s *settingsWindow) about(c *ui.Context) {
+	t := c.Theme()
+	if logoBitmap == nil {
+		logoBitmap, _ = ui.DecodeBitmap(logoPNG)
+	}
+	version := "Development build"
+	if v := mygo.App.Version(); v != "" {
+		version = "Version " + v
+	}
+	ui.Column(c).FillWidth().AlignItems(ui.Center).Gap(6).Padding(4, 0, 12, 0).Children(func() {
+		if logoBitmap != nil {
+			ui.Image(c, logoBitmap).Size(96, 96).Label("AirDroid")
 		}
-		formRow(c, "AirDroid "+version, "Updates are published on GitHub.", func() {
+		ui.Text(c, "AirDroid").Bold().FontSize(20)
+		ui.Text(c, version).FontSize(12.5).TextColor(t.TextMuted)
+		ui.Text(c, "© 2026 CapyTown · MIT License").FontSize(12.5).TextColor(t.TextMuted)
+		ui.Row(c).Gap(8).Padding(8, 0, 0, 0).Children(func() {
 			if ui.Button(c.Key("updates"), "Check for Updates…").Clicked() {
 				mygo.Shell.OpenExternal(ReleasesURL)
 			}
-		})
-		formRow(c, "Feedback", "Tell of a bug, or an idea.", func() {
-			ui.Link(c.Key("feedback"), "Send Feedback…", IssuesURL).TextColor(t.Accent)
+			if ui.Button(c.Key("feedback"), "Send Feedback…").Clicked() {
+				mygo.Shell.OpenExternal(IssuesURL)
+			}
+			if ui.Button(c.Key("source"), "Source Code").Clicked() {
+				mygo.Shell.OpenExternal(SourceURL)
+			}
 		})
 	})
+	sectionHeading(c, "Open source")
+	section(c, func() {
+		for _, o := range openSource {
+			ui.Row(c.Key(o.name)).FillWidth().MinHeight(48).PaddingY(9).Gap(12).AlignItems(ui.Center).Children(func() {
+				ui.Column(c).Grow(1).Shrink(1).Gap(2).Children(func() {
+					ui.Text(c, o.name).FontSize(13)
+					ui.Text(c, o.note).FontSize(11.5).TextColor(t.TextMuted).Wrap()
+				})
+				ui.Text(c, o.licence).FontSize(11.5).TextColor(t.TextMuted)
+				ui.Link(c.Key("link"), "Open", o.url).TextColor(t.Accent).Label(o.name)
+			})
+		}
+	})
+	sectionNote(c, "Their licences ship with AirDroid, beside each program.")
 }
 
 // shortcuts lists the keys and clicks of AirDroid.
