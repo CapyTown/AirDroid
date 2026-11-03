@@ -110,7 +110,7 @@ func (a *App) refreshMenu() {
 	add(&mygo.MenuItem{Label: "Add Device…", Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }})
 	add(mygo.Separator())
 	add(&mygo.MenuItem{Label: "Settings…", Accelerator: "CmdOrCtrl+,", Click: func(*mygo.MenuItem, *mygo.Window) { a.openSettings() }})
-	add(&mygo.MenuItem{Role: mygo.RoleQuit, Label: "Quit AirDroid"})
+	add(&mygo.MenuItem{Role: mygo.RoleQuit, Label: "Quit"})
 
 	a.tray.SetMenu(mygo.NewMenu(items))
 	if recording {
@@ -141,7 +141,7 @@ func (a *App) menuBar() *mygo.Menu {
 			{Role: mygo.RoleHideOthers},
 			{Role: mygo.RoleUnhide},
 			mygo.Separator(),
-			{Role: mygo.RoleQuit, Label: "Quit AirDroid"},
+			{Role: mygo.RoleQuit, Label: "Quit"},
 		}},
 		{Label: "File", Submenu: []*mygo.MenuItem{
 			{Label: "Add Device…", Accelerator: "CmdOrCtrl+N", Click: func(*mygo.MenuItem, *mygo.Window) { a.openAddDevice() }},
