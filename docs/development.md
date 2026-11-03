@@ -73,14 +73,12 @@ macOS; try it on a Mac with a phone.
 ## The README's screenshots
 
 The screenshots in `docs/images` are AirDroid's real views, rendered without a
-window. A home screen drawn with MyGo stands in for the phone's:
+window. A home screen drawn with MyGo, with app icons of its own, stands in for
+the phone's:
 
 ```sh
 AIRDROID_DOCS_IMAGES=$PWD/docs/images go test -run DocsImages ./internal/app
 ```
-
-`hero.png` is composed from `mirror.png`, `settings-general.png` and
-`add-wifi.png`.
 
 ## Releasing
 
