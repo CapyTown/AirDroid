@@ -82,14 +82,15 @@ def extract(data, filename, destination):
                     write(entry.name, entry.size, entry.mode, stream)
 
 
-def stage(platform, local_archives):
+def stage(platform, architectures, local_archives):
     parent = ROOT / "resources" / platform
     parent.mkdir(parents=True, exist_ok=True)
-    # Finish both Mac architectures before replacing an existing installation.
+    # Finish every architecture before replacing an existing installation.
     with tempfile.TemporaryDirectory(prefix=".scrcpy-", dir=parent) as temporary:
         staged = Path(temporary) / "scrcpy"
         staged.mkdir()
-        for architecture, (filename, expected_hash) in ARCHIVES[platform].items():
+        for architecture in architectures:
+            filename, expected_hash = ARCHIVES[platform][architecture]
             url = BASE_URL + filename
             source = local_archives.get(filename)
             if source:
@@ -123,7 +124,7 @@ def stage(platform, local_archives):
         if destination.exists():
             shutil.rmtree(destination)
         staged.rename(destination)
-    print(f"Staged scrcpy {VERSION} in {destination}")
+    print(f"Staged scrcpy {VERSION} ({', '.join(architectures)}) in {destination}")
 
 
 def main():
@@ -131,14 +132,22 @@ def main():
     parser.add_argument("platform", choices=ARCHIVES)
     parser.add_argument("--archive", type=Path, action="append", default=[],
                         help="Use a local official archive with its original filename; repeat for both Mac architectures")
+    parser.add_argument("--arch", action="append", default=[],
+                        help="Stage only this processor's scrcpy (arm64, amd64); repeatable. "
+                             "By default every one of the platform's: both on macOS, for a universal app")
     args = parser.parse_args()
-    expected = {name for name, _ in ARCHIVES[args.platform].values()}
+    architectures = args.arch or list(ARCHIVES[args.platform])
+    unknown = [a for a in architectures if a not in ARCHIVES[args.platform]]
+    if unknown:
+        parser.error(f"No scrcpy for {args.platform}/{', '.join(unknown)}: choose from {', '.join(ARCHIVES[args.platform])}")
+    architectures = list(dict.fromkeys(architectures))
+    expected = {ARCHIVES[args.platform][a][0] for a in architectures}
     local = {path.name: path for path in args.archive}
     if len(local) != len(args.archive) or not local.keys() <= expected:
         parser.error("Local archives must have unique, expected official filenames")
     if local and local.keys() != expected:
         parser.error("Provide every archive for this platform when using --archive")
-    stage(args.platform, local)
+    stage(args.platform, architectures, local)
 
 
 if __name__ == "__main__":

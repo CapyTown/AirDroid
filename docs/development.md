@@ -51,6 +51,10 @@ resources/linux/scrcpy/{scrcpy,scrcpy-server,origin.json}
 resources/linux/ffmpeg/ffmpeg
 ```
 
+On macOS both processors' scrcpy are staged, for a universal app;
+`--arch arm64` stages Apple silicon's alone, as the release does for its
+Apple silicon DMG.
+
 `origin.json` records the scrcpy version, which scrcpy-server must be told.
 These files are not committed. The scripts take local archives too
 (`--archive`, `--from-directory`, `--from-sdk`), for builds without network.

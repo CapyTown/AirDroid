@@ -26,6 +26,8 @@ jobs:
             os: macos-latest
             platform: darwin/arm64
             adb: darwin
+            # Apple silicon alone: the Intel scrcpy would be dead weight.
+            scrcpy_arch: arm64
             artifact: macos-arm64
             path: build/darwin-arm64/*.dmg
           - name: macOS universal DMG
@@ -85,7 +87,7 @@ jobs:
       - name: Bundle ADB
         run: python scripts/bundle-adb.py "${{ matrix.adb }}"
       - name: Bundle scrcpy
-        run: python scripts/bundle-scrcpy.py "${{ matrix.adb }}"
+        run: python scripts/bundle-scrcpy.py "${{ matrix.adb }}" ${{ matrix.scrcpy_arch && format('--arch {0}', matrix.scrcpy_arch) || '' }}
       - name: Bundle FFmpeg
         run: python scripts/bundle-ffmpeg.py "${{ matrix.adb }}"
       # MyGo downloads NSIS automatically on Windows when it is not installed.
