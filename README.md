@@ -2,6 +2,8 @@
   <img src="docs/images/hero.png" alt="AirDroid: an Android phone mirrored on a Mac, with its settings and the Add Device dialog" width="100%">
 </p>
 
+<p align="center"><img src="docs/images/logo.png" alt="AirDroid" width="128"></p>
+
 <h1 align="center">AirDroid</h1>
 
 <p align="center">

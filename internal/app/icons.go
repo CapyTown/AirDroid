@@ -36,8 +36,8 @@ var (
 	iconAlert    = svg(`<circle cx="12" cy="12" r="9"/><path d="M12 8v5"/><path d="M12 16h.01"/>`)
 )
 
-// Tray icons: a phone, black on transparent for the menu bar to tint, and
-// the same with a red dot while a recording runs.
+// Tray icons: the head of AirDroid's logo, black on transparent for the
+// menu bar to tint, and the same with a red dot while a recording runs.
 var (
 	trayIconPNG    = drawTrayIcon(false)
 	trayIconRecPNG = drawTrayIcon(true)
@@ -45,41 +45,27 @@ var (
 
 func drawTrayIcon(recording bool) []byte {
 	const s = 36 // 18 pt at 2x
+	const n = 4  // samples per pixel side, for smooth edges
 	img := image.NewNRGBA(image.Rect(0, 0, s, s))
-	ink := color.NRGBA{0, 0, 0, 255}
-	// Phone body: a rounded rectangle outline.
-	x0, y0, x1, y1 := 10, 3, 26, 33
-	r := 4
-	for y := y0; y < y1; y++ {
-		for x := x0; x < x1; x++ {
-			if !inRounded(x, y, x0, y0, x1, y1, r) {
-				continue
-			}
-			inner := inRounded(x, y, x0+3, y0+3, x1-3, y1-3, r-2)
-			if !inner {
-				img.Set(x, y, ink)
-			}
-		}
-	}
-	// Speaker slot and a mirrored-screen bar.
-	for x := 16; x < 20; x++ {
-		img.Set(x, 29, ink)
-	}
-	for y := 9; y < 22; y++ {
-		for x := 15; x < 21; x++ {
-			if y >= 12 && y < 19 {
-				img.Set(x, y, color.NRGBA{0, 0, 0, 140})
-			}
-		}
-	}
-	if recording {
-		red := color.NRGBA{255, 59, 48, 255}
-		cx, cy, rr := 28, 8, 6
-		for y := cy - rr; y <= cy+rr; y++ {
-			for x := cx - rr; x <= cx+rr; x++ {
-				if (x-cx)*(x-cx)+(y-cy)*(y-cy) <= rr*rr && x >= 0 && x < s && y >= 0 {
-					img.Set(x, y, red)
+	for py := 0; py < s; py++ {
+		for px := 0; px < s; px++ {
+			ink, red := 0, 0
+			for sy := 0; sy < n; sy++ {
+				for sx := 0; sx < n; sx++ {
+					x := float64(px) + (float64(sx)+0.5)/n
+					y := float64(py) + (float64(sy)+0.5)/n
+					if recording && inDisc(x, y, 30, 7, 5.5) {
+						red++
+					} else if inLogo(x, y) {
+						ink++
+					}
 				}
+			}
+			switch {
+			case red > 0:
+				img.Set(px, py, color.NRGBA{255, 59, 48, uint8(red * 255 / (n * n))})
+			case ink > 0:
+				img.Set(px, py, color.NRGBA{0, 0, 0, uint8(ink * 255 / (n * n))})
 			}
 		}
 	}
@@ -88,23 +74,27 @@ func drawTrayIcon(recording bool) []byte {
 	return buf.Bytes()
 }
 
-func inRounded(x, y, x0, y0, x1, y1, r int) bool {
-	if x < x0 || x >= x1 || y < y0 || y >= y1 {
+// inLogo reports whether a point of the 36×36 icon is inked: a half disc
+// with two eyes cut out, and two antennas.
+func inLogo(x, y float64) bool {
+	const cx, base, r = 18.0, 27.5, 14.0
+	head := y <= base && inDisc(x, y, cx, base, r)
+	if head && (inDisc(x, y, 12.5, 21.5, 2) || inDisc(x, y, 23.5, 21.5, 2)) {
 		return false
 	}
-	cx, cy := x, y
-	switch {
-	case x < x0+r:
-		cx = x0 + r
-	case x >= x1-r:
-		cx = x1 - r - 1
-	}
-	switch {
-	case y < y0+r:
-		cy = y0 + r
-	case y >= y1-r:
-		cy = y1 - r - 1
-	}
-	dx, dy := x-cx, y-cy
-	return dx*dx+dy*dy <= r*r
+	return head || nearSegment(x, y, 11.5, 16.5, 7.5, 9.5, 1.3) || nearSegment(x, y, 24.5, 16.5, 28.5, 9.5, 1.3)
+}
+
+func inDisc(x, y, cx, cy, r float64) bool {
+	return (x-cx)*(x-cx)+(y-cy)*(y-cy) <= r*r
+}
+
+// nearSegment reports whether a point is within w of the segment from
+// (x0, y0) to (x1, y1): a stroke with round caps.
+func nearSegment(x, y, x0, y0, x1, y1, w float64) bool {
+	dx, dy := x1-x0, y1-y0
+	t := ((x-x0)*dx + (y-y0)*dy) / (dx*dx + dy*dy)
+	t = max(0, min(1, t))
+	px, py := x0+t*dx-x, y0+t*dy-y
+	return px*px+py*py <= w*w
 }
