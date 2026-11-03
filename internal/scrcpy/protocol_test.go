@@ -103,9 +103,15 @@ func TestResolveServerVersionFromOrigin(t *testing.T) {
 	dir := t.TempDir()
 	os.WriteFile(filepath.Join(dir, "scrcpy-server"), []byte("jar"), 0o644)
 	os.WriteFile(filepath.Join(dir, "origin.json"), []byte(`{"version": "5.0.1", "architecture": "amd64"}`), 0o644)
+	// ResolveServer resolves links, as /var to /private/var on macOS and a
+	// short name on Windows.
+	want, err := filepath.EvalSymlinks(filepath.Join(dir, "scrcpy-server"))
+	if err != nil {
+		t.Fatal(err)
+	}
 	for _, path := range []string{filepath.Join(dir, "scrcpy-server"), dir} {
 		s, err := ResolveServer(context.Background(), path)
-		if err != nil || s.Version != "5.0.1" || s.Path != filepath.Join(dir, "scrcpy-server") {
+		if err != nil || s.Version != "5.0.1" || s.Path != want {
 			t.Errorf("%s: %+v %v", path, s, err)
 		}
 	}
