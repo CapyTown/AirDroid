@@ -1,0 +1,6 @@
+/build/
+/.mygo/
+# Fetched by scripts/fetch-scrcpy.sh
+/resources/darwin/
+/resources/darwin-arm64/
+/resources/darwin-amd64/

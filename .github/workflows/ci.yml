@@ -1,0 +1,34 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Install ffmpeg (the recording tests check movies with it)
+        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+      - run: go test -race ./...
+      - run: make vet
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - name: Build MyGo.app (universal)
+        run: make build
+      - uses: actions/upload-artifact@v4
+        with:
+          name: MyGo-macOS
+          path: |
+            build/darwin-universal/*.dmg
+            build/darwin-universal/MyGo.app
