@@ -110,7 +110,7 @@ func TestSettingsView(t *testing.T) {
 	s := &settingsWindow{app: a, cfg: a.cfg.Get()}
 	for _, page := range []string{"general", "mirroring", "shortcuts", "advanced"} {
 		s.page = page
-		snapshot(t, "settings-"+page, s.view, 760, 600)
+		snapshot(t, "settings-"+page, s.view, 860, 600)
 	}
 }
 

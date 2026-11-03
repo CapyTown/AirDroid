@@ -61,16 +61,17 @@ func (a *App) openSettings() {
 	s.scrcpyCustom = s.cfg.ScrcpyPath != ""
 	s.win = mygo.NewWindow(mygo.WindowOptions{
 		Title:             "Settings",
-		Width:             760,
+		Width:             860,
 		Height:            600,
-		MinWidth:          660,
+		MinWidth:          760,
 		MinHeight:         440,
 		TitleBarStyle:     mygo.TitleBarHidden,
 		DisableMinimize:   true,
 		DisableMaximize:   true,
 		DisableFullScreen: true,
-		StateKey:          "settings",
-		Content:           ui.View(s.view),
+		// A new key: sizes saved by the narrower window of before do not hold.
+		StateKey: "settings-2",
+		Content:  ui.View(s.view),
 	})
 	s.win.OnClosed(func() {
 		a.settings = nil

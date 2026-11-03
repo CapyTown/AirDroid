@@ -51,7 +51,7 @@ func TestDocsImages(t *testing.T) {
 		scrcpyStatus: "scrcpy-server 5.0.1 · /Applications/AirDroid.app/Contents/Resources/scrcpy-server"}
 	for _, page := range []string{"general", "mirroring", "shortcuts", "advanced"} {
 		s.page = page
-		save("settings-"+page, ui.Render(s.view, 760, 600, 2))
+		save("settings-"+page, ui.Render(s.view, 860, 600, 2))
 	}
 
 	d := &addDeviceWindow{app: a}
