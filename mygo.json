@@ -3,6 +3,7 @@
   "slug": "airdroid",
   "identifier": "com.capytown.airdroid",
   "version": "0.1.0",
+  "buildVersion": 1,
   "copyright": "© 2026 AirDroid contributors",
   "out": "build",
   "macos": {

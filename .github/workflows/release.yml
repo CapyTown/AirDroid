@@ -1,0 +1,98 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: macOS universal DMG
+            os: macos-latest
+            platform: darwin/universal
+            artifact: macos
+            path: build/darwin-universal/*.dmg
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-go@v7
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.13'
+      - name: Check release version
+        if: github.event_name == 'push'
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+
+          config = json.loads(Path("mygo.json").read_text(encoding="utf-8"))
+          version = config["version"]
+          build = config["buildVersion"]
+          if type(build) is not int or build < 0:
+              raise SystemExit("mygo.json buildVersion must be a nonnegative integer")
+          expected = f"v{version}-{build}"
+          tag = os.environ["GITHUB_REF_NAME"]
+          if tag != expected:
+              raise SystemExit(f"Tag {tag} must match mygo.json release {expected}")
+          PY
+      - name: Validate
+        run: |
+          go test ./...
+          go vet ./...
+          go tool mygo vet
+      # adb, scrcpy and scrcpy-server from scrcpy's official macOS release,
+      # checked against their SHA-256.
+      - name: Bundle ADB and scrcpy
+        run: ./scripts/fetch-scrcpy.sh
+      # Publishing belongs to the release job; these builds need no signing secrets.
+      - name: Build installer
+        run: go tool mygo build -platform "${{ matrix.platform }}" -sign=- -skip-notarize
+      - uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact }}
+          path: ${{ matrix.path }}
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub release
+    if: github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          path: artifacts
+          merge-multiple: true
+      - name: Publish
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "$GITHUB_REF_NAME" artifacts/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --verify-tag \
+            --title "$GITHUB_REF_NAME" \
+            --notes ''

@@ -82,12 +82,24 @@ AIRDROID_DOCS_IMAGES=$PWD/docs/images go test -run DocsImages ./internal/app
 
 ## Releasing
 
-1. Set `version` in `mygo.json`.
-2. Run `make build` on a Mac. It signs ad hoc unless `macos.signingIdentity`
-   is set; see MyGo's
-   [distribution guide](https://github.com/egoist/mygo/blob/main/docs/distribution.md)
-   for Developer ID signing and notarization.
-3. Upload the `.dmg` to a GitHub release.
+Releases are built and published by `.github/workflows/release.yml` when a
+tag is pushed:
 
-CI (`.github/workflows/ci.yml`) runs the tests on Linux and builds the app on
-macOS on every push.
+1. Set `version` in `mygo.json`, and bump `buildVersion` (a whole number,
+   one more for each release).
+2. Commit, then tag the commit `v<version>-<buildVersion>`, as `v0.1.0-1`,
+   and push the tag. The workflow refuses a tag that does not match
+   `mygo.json`.
+3. On a macOS runner, the workflow:
+   - runs `go test`, `go vet` and `mygo vet`;
+   - bundles adb and scrcpy (`scripts/fetch-scrcpy.sh`);
+   - builds the universal app and its `.dmg`, signed ad hoc
+     (`-sign=- -skip-notarize`).
+4. A last job publishes a GitHub release of the tag with the `.dmg`.
+
+The workflow can also run by hand (*Run workflow*), which builds the `.dmg`
+as an artifact without publishing it.
+
+To ship builds that open without a Gatekeeper warning, set a Developer ID in
+`macos.signingIdentity` and notarize; see MyGo's
+[distribution guide](https://github.com/egoist/mygo/blob/main/docs/distribution.md).
